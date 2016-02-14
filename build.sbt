@@ -71,7 +71,8 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "autowire" % "0.2.5",
     "com.lihaoyi" %%% "upickle" % "0.3.6",
-    "com.lihaoyi" %%% "scalarx" % "0.3.0"
+    "com.lihaoyi" %%% "scalarx" % "0.3.0",
+    "me.chrons" %%% "diode" % "0.5.0"
   ))
   .jsConfigure(_ enablePlugins ScalaJSPlay)
 
