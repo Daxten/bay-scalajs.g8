@@ -1,5 +1,6 @@
 package stores.engine
 
+import _root_.reactStore.RxObserver
 import diode.data._
 import japgolly.scalajs.react._
 import utils.RxObserver
@@ -14,13 +15,13 @@ trait ReactCollection[T] extends ReactModel {
   protected val model: Var[Pot[Seq[T]]] = Var(Empty)
   private var runningCallback: Option[Future[Seq[T]]] = None
 
-  def loadModel: Future[Seq[T]]
+  def asyncLoad: Future[Seq[T]]
 
   private def load = {
     model() = readObs.now.pending()
 
     println(s"Loading $name")
-    runningCallback = Some(loadModel.map { e =>
+    runningCallback = Some(asyncLoad.map { e =>
       model() = Ready(e)
       runningCallback = None
       e
@@ -43,69 +44,26 @@ trait ReactCollection[T] extends ReactModel {
   // read only access
   def now = model.now
 
-  // observable access
-  val readObs: Rx[Pot[Seq[T]]] = Rx.unsafe {
-    model()
-  }
+  // read only access, observable access
+  val readObs: Rx[Pot[Seq[T]]] = model.r
 
-  def render(f: Seq[T] => ReactElement) = ReadyComponent.component(ReadyComponent.Props(f))
+  def render(failed: () => ReactElement, pending: () => ReactElement, ready: (Seq[T]) => ReactElement) = StoreComponent.component(StoreComponent.Props(failed, pending, ready))
 
-  def renderPending(f: Long => ReactElement) = PendingComponent.component(PendingComponent.Props(f))
+  object StoreComponent {
 
-  def renderFailed(f: Throwable => ReactElement) = FailedComponent.component(FailedComponent.Props(f))
-
-  object ReadyComponent {
-
-    case class Props(render: Seq[T] => ReactElement)
+    case class Props(failed: () => ReactElement, pending: () => ReactElement, ready: (Seq[T]) => ReactElement)
 
     class Backend($: BackendScope[Props, Unit]) extends RxObserver($) {
-      def mounted(p: Props) = observe(model)
+      def mounted(p: Props) = observe(model) >> Callback(smartLoad)
 
-      def render(p: Props) = readObs.now match {
-        case Ready(content) => p.render(content)
-        case _ => null
+      def render(p: Props) = {
+        if (now.isPending) p.pending()
+        else if (now.isReady) p.ready(now.get)
+        else p.failed()
       }
     }
 
-    val component = ReactComponentB[Props](s"$name-ReadyWrapper")
-      .renderBackend[Backend]
-      .componentDidMount($ => $.backend.mounted($.props))
-      .build
-  }
-
-  object PendingComponent {
-
-    case class Props(render: Long => ReactElement)
-
-    class Backend($: BackendScope[Props, Unit]) extends RxObserver($) {
-      def mounted(p: Props) = observe(model)
-
-      def render(p: Props) = readObs.now match {
-        case Pending(startTime) => p.render(startTime)
-        case _ => null
-      }
-    }
-
-    val component = ReactComponentB[Props](s"$name-PendingWrapper")
-      .renderBackend[Backend]
-      .componentDidMount($ => $.backend.mounted($.props))
-      .build
-  }
-
-  object FailedComponent {
-
-    case class Props(render: Throwable => ReactElement)
-
-    class Backend($: BackendScope[Props, Unit]) extends RxObserver($) {
-      def mounted(p: Props) = observe(model)
-
-      def render(p: Props) = readObs.now match {
-        case Failed(e) => p.render(e)
-        case _ => null
-      }
-    }
-
-    val component = ReactComponentB[Props](s"$name-FailedWrapper")
+    val component = ReactComponentB[Props](s"$name-Wrapper")
       .renderBackend[Backend]
       .componentDidMount($ => $.backend.mounted($.props))
       .build
