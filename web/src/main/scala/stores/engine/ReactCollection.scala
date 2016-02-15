@@ -1,6 +1,5 @@
 package stores.engine
 
-import _root_.reactStore.RxObserver
 import diode.data._
 import japgolly.scalajs.react._
 import utils.RxObserver
