@@ -97,7 +97,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
        |import bay.driver.CustomizedPgDriver
        |import scala.concurrent.{Future, ExecutionContext}
        |import play.api.db.slick.HasDatabaseConfig
-       |import models.auto_generated._
+       |import models._
        |
        |// AUTO-GENERATED Slick data model
        |

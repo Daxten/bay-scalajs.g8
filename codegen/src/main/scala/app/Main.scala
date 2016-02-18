@@ -70,10 +70,28 @@ object Main extends App {
          |}
      """.stripMargin
 
+    val sharedObjectTemplate =
+      s"""
+         |package shared.models
+         |
+       |object Shared$name extends shared.models.auto_generated.Shared$name {
+         |
+       |}
+     """.stripMargin
+
+    val objectFile = new File(s"shared/src/main/scala/shared/models/Shared$name.scala")
+    if (objectFile.createNewFile()) {
+      new PrintWriter(objectFile) {
+        write(sharedObjectTemplate)
+        close()
+      }
+    }
+
     new PrintWriter(s"shared/src/main/scala/shared/models/auto_generated/Shared$name.scala") {
       write(sharedTemplate)
       close()
     }
+
   }
 }
 
