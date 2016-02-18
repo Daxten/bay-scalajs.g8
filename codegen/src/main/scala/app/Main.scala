@@ -65,7 +65,7 @@ object Main extends App {
       s"""
          |package shared.models.auto_generated
          |
-         |trait Shared$name {
+         |object Shared$name {
          |  $sharedSource
          |}
      """.stripMargin
