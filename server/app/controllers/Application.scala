@@ -10,13 +10,14 @@ import scala.concurrent.ExecutionContext
 
 
 class Application @Inject()(val messagesApi: MessagesApi)(implicit val ec: ExecutionContext)
-  extends Controller
+  extends ExtendedController
     with AuthConfigImpl
     with OptionalAuthElement
     with LoginLogout
     with I18nSupport {
 
   import upickle.default._
+  import shared.models.SharedDefault._
 
   def index(path: String) = StackAction { implicit request =>
     loggedIn match {

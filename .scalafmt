@@ -1,0 +1,2 @@
+--maxColumn 160
+--alignTokens =>;Case,=;Defn.(Va(l|r)|Def),->;Term.ApplyInfix,//;.*,|>;.*,<-;.*

@@ -10,8 +10,7 @@ trait CustomizedPgDriver extends ExPostgresDriver
   with PgEnumSupport
   with PgRangeSupport
   with PgHStoreSupport
-  with PgSearchSupport
-  with PgPostGISSupport {
+  with PgSearchSupport {
 
   override val api = new MyAPI {}
 
@@ -20,7 +19,6 @@ trait CustomizedPgDriver extends ExPostgresDriver
     with RangeImplicits
     with HStoreImplicits
     with SearchImplicits
-    with PostGISImplicits
     with SearchAssistants
     with DateTimeImplicits
 }

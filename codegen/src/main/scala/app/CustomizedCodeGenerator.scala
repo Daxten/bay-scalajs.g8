@@ -28,6 +28,8 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
     override def autoIncLastAsOption = true
 
     override def EntityType = new EntityTypeDef {
+      override def doc: String = ""
+
       override def code = {
         val args = columns.map(c =>
           c.default.map(v =>
@@ -52,9 +54,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
         val prns = parents.map(" with " + _).mkString("")
 
         s"""
-           |case class $name($args) $prns {
-           |  def asJs = shared.models.auto_generated.Shared$$CONTAINER.$name($jsArgs)
-           |}
+           |case class $name($args) $prns
              """.stripMargin
       }
     }
@@ -69,18 +69,15 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
             case "timestamptz" => "java.time.OffsetDateTime"
             case _ => "java.time.LocalDateTime"
           } getOrElse "java.time.LocalDateTime"
-        case "String" => model.options.find(_.isInstanceOf[ColumnOption.SqlType])
-          .map(_.asInstanceOf[ColumnOption.SqlType].typeName).map({ e =>
-          e match {
-            case "hstore" => "Map[String, String]"
-            case "_text" => "List[String]"
-            case "_varchar" => "List[String]"
-            case "geometry" => "com.vividsolutions.jts.geom.Geometry"
-            case "int8[]" => "List[Long]"
-            case "interval" => "java.time.Duration"
-            case e => "String"
-          }
-        }).getOrElse("String")
+        case "String" => model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
+          case "hstore" => "Map[String, String]"
+          case "_text" => "List[String]"
+          case "_varchar" => "List[String]"
+          case "geometry" => "com.vividsolutions.jts.geom.Geometry"
+          case "int8[]" => "List[Long]"
+          case "interval" => "java.time.Duration"
+          case e => "String"
+        } getOrElse "String"
         case _ => super.rawType.asInstanceOf[String]
       }
 
@@ -95,9 +92,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
        |package $pkg
        |
        |import bay.driver.CustomizedPgDriver
-       |import scala.concurrent.{Future, ExecutionContext}
-       |import play.api.db.slick.HasDatabaseConfig
-       |import models._
+       |import shared.models.Shared$container._
        |
        |// AUTO-GENERATED Slick data model
        |

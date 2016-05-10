@@ -1,5 +1,7 @@
 package components
 
+import java.time.OffsetDateTime
+
 import app.AppRouter.Loc
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
@@ -18,7 +20,10 @@ object LayoutComponent extends ReactTags {
     def render(props: Props, state: State) = {
       <.div(
         <.h1("Layout"),
-        props.r.render()
+        <.div(
+          <.h2("Render Content:"),
+          props.r.render()
+        )
       )
     }
   }
