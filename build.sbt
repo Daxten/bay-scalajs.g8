@@ -36,9 +36,9 @@ lazy val jsProjects = Seq(web)
 lazy val driver = (project in file("driver"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-      "com.github.tminglei" %% "slick-pg" % "0.12.2",
-      "com.github.tminglei" %% "slick-pg_date2" % "0.12.2"
+      "org.postgresql" % "postgresql" % "9.4.1208",
+      "com.github.tminglei" %% "slick-pg" % "0.14.1",
+      "com.github.tminglei" %% "slick-pg_date2" % "0.14.1"
     )
   )
 
@@ -54,7 +54,7 @@ lazy val server = (project in file("server"))
       jdbc,
       cache,
       ws,
-      "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
+      "org.postgresql" % "postgresql" % "9.4.1208",
       "com.typesafe.slick" %% "slick" % "3.1.1",
       "com.typesafe.play" %% "play-slick" % "1.1.1",
       "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
