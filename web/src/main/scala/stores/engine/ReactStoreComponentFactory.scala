@@ -7,11 +7,13 @@ object ReactStoreComponentFactory {
 
   case class RenderProps2[Id1, T1, Id2, T2](failed: () => ReactElement, pending: () => ReactElement, ready: (Seq[T1], Seq[T2]) => ReactElement)
 
-  class RenderBackend2[Id1, T1, Id2, T2]($: BackendScope[RenderProps2[Id1, T1, Id2, T2], Unit], t1: ReactStore[Id1, T1], t2: ReactStore[Id2, T2]) extends RxObserver($) {
+  class RenderBackend2[Id1, T1, Id2, T2]($ : BackendScope[RenderProps2[Id1, T1, Id2, T2], Unit], t1: ReactStore[Id1, T1], t2: ReactStore[Id2, T2])
+      extends RxObserver($) {
+
     def mounted(p: RenderProps2[Id1, T1, Id2, T2]) = observe(t1.readObs, t2.readObs) >> Callback.future {
       for {
-        _ <- t1.smartLoad()
-        _ <- t2.smartLoad()
+        _ <- t1.access
+        _ <- t2.access
       } yield Callback.empty
     }
 
@@ -21,6 +23,7 @@ object ReactStoreComponentFactory {
       else if (Seq(t1, t2).forall(_.now.isReady)) p.ready(t1.now.get, t2.now.get)
       else p.failed()
     }
+
   }
 
   def build[Id1, T1, Id2, T2](t1: ReactStore[Id1, T1], t2: ReactStore[Id2, T2]) = {
@@ -32,6 +35,8 @@ object ReactStoreComponentFactory {
       .componentDidMount($ => $.backend.mounted($.props))
       .build
 
-    (failed: () => ReactElement, pending: () => ReactElement, ready: (Seq[T1], Seq[T2]) => ReactElement) => component(RenderProps2(failed, pending, ready))
+    (failed: () => ReactElement, pending: () => ReactElement, ready: (Seq[T1], Seq[T2]) => ReactElement) =>
+      component(RenderProps2(failed, pending, ready))
   }
+
 }

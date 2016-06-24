@@ -22,7 +22,29 @@ trait ReactStore[Id, T] {
   protected val model: Var[Pot[Seq[T]]] = Var(Empty)
   private var runningCallback: Option[Future[Seq[T]]] = None
 
+  // read only access
+  def now: Pot[Seq[T]] = model.now
+
+  // read only access, observable access
+  val readObs: Rx[Pot[Seq[T]]] = model.r
+
   def init = Future.successful(Seq.empty)
+
+  def access: Future[Seq[T]] = {
+    (model.now, runningCallback) match {
+      case (Failed(e), _)                      => Future.failed(e)
+      case (e, Some(callback)) if e.isPending  => callback
+      case (e, Some(callback)) if !e.isPending => load(initData)
+    }
+  }
+
+  def accessWith(f: Future[Seq[T]]): Future[Seq[T]] = {
+    (model.now, runningCallback) match {
+      case (Failed(e), _)                      => Future.failed(e)
+      case (e, Some(callback)) if e.isPending  => callback
+      case (e, Some(callback)) if !e.isPending => load(f)
+    }
+  }
 
   private def load(f: Future[Seq[T]]) = {
     model() = readObs.now.pending()
@@ -45,20 +67,6 @@ trait ReactStore[Id, T] {
 
     f
   }
-
-  def smartLoad(f: Future[Seq[T]] = initData): Future[Seq[T]] = {
-    model.now match {
-      case Failed(e)         => Future.failed(e)
-      case e if e.isPending  => runningCallback.get
-      case e if !e.isPending => load(f)
-    }
-  }
-
-  // read only access
-  def now = model.now
-
-  // read only access, observable access
-  val readObs: Rx[Pot[Seq[T]]] = model.r
 
   def render(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement) =
     StoreComponent.component(StoreComponent.Props(failed, pending, ready))
@@ -98,7 +106,7 @@ trait ReactStore[Id, T] {
 
   def updateOrInsertIntoStore(changed: T): Future[Seq[T]] = {
     for {
-      data <- smartLoad()
+      data <- access
     } yield {
       val updatedModel = {
         if (data.exists(e => isEqual(getId(e), getId(changed)))) data.map(x => if (isEqual(getId(changed), getId(x))) changed else x)
@@ -111,7 +119,7 @@ trait ReactStore[Id, T] {
 
   def updateOrInsertIntoStore(changes: Seq[T]): Future[Seq[T]] = {
     for {
-      data <- smartLoad()
+      data <- access
     } yield {
       val updatedModel = changes.foldLeft(data)((coll, e) => {
         coll
@@ -129,7 +137,7 @@ trait ReactStore[Id, T] {
 
   def removeFromStore(id: Id): Future[Seq[T]] = {
     for {
-      data <- smartLoad()
+      data <- access
     } yield {
       val updatedModel = data.filter(e => !isEqual(getId(e), id))
       model() = Ready(updatedModel)
