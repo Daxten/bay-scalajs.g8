@@ -97,10 +97,10 @@ trait ReactStore[Id, T] {
           case Failed(e)          => p.failed(e)
           case Pending(e)         => p.pending(e)
           case Ready(e)           => p.ready(e)
-          case FailedStale(t, e)  => null // TODO
-          case PendingStale(t, e) => null // TODO
-          case Unavailable        => null // TODO
-          case Empty              => null // TODO
+          case FailedStale(t, e)  => null // not used atm
+          case PendingStale(t, e) => null // not used atm
+          case Unavailable        => null // not used atm
+          case Empty              => p.ready(Seq.empty)
         }
       }
     }
