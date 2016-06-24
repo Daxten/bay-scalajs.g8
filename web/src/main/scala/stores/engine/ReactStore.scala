@@ -1,8 +1,8 @@
 package stores.engine
 
 import diode.data._
-import japgolly.scalajs.react.extra.TimerSupport
-import japgolly.scalajs.react.{Callback, BackendScope, ReactComponentB, ReactElement}
+import japgolly.scalajs.react.extra.{OnUnmount, TimerSupport}
+import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactElement}
 import utils.RxObserver
 
 import scala.concurrent.Future
@@ -28,11 +28,14 @@ trait ReactStore[Id, T] {
     model() = readObs.now.pending()
 
     println(s"Loading $name")
-    runningCallback = Some(f.map { e =>
-      model() = Ready(e)
-      runningCallback = None
-      e
-    })
+    runningCallback = Some(f)
+
+    f onSuccess {
+      case e =>
+        model() = Ready(e)
+        runningCallback = None
+        e
+    }
 
     f recover {
       case e: Throwable =>
@@ -40,7 +43,7 @@ trait ReactStore[Id, T] {
         runningCallback = None
     }
 
-    runningCallback.get
+    f
   }
 
   def smartLoad(f: Future[Seq[T]] = initData): Future[Seq[T]] = {
@@ -57,16 +60,20 @@ trait ReactStore[Id, T] {
   // read only access, observable access
   val readObs: Rx[Pot[Seq[T]]] = model.r
 
-  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement) = StoreComponent.component(StoreComponent.Props(failed, pending, ready))
+  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement) =
+    StoreComponent.component(StoreComponent.Props(failed, pending, ready))
 
   object StoreComponent {
+
     import scala.concurrent.duration._
 
     case class Props(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement)
 
     class Backend($: BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
-      def mounted(p: Props) = dependantObserve[Pot[Seq[T]]](readObs, (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
-        setInterval(Callback.ifTrue(now.isPending, $.forceUpdate), 1.second)
+      def mounted(p: Props) =
+        dependantObserve[Pot[Seq[T]]](readObs, (a, b) =>
+          (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
+          setInterval(Callback.ifTrue(now.isPending, $.forceUpdate), 1.second)
 
       def render(p: Props) = {
         now match {
@@ -77,11 +84,8 @@ trait ReactStore[Id, T] {
       }
     }
 
-    val component = ReactComponentB[Props](s"$name-Wrapper")
-      .renderBackend[Backend]
-      .componentDidMount($ => $.backend.mounted($.props))
-      .configure(TimerSupport.install)
-      .build
+    val component =
+      ReactComponentB[Props](s"$name-Wrapper").renderBackend[Backend].componentDidMount($ => $.backend.mounted($.props)).configure(TimerSupport.install, OnUnmount.install).build
   }
 
   def updateOrInsertIntoStore(changed: T): Future[Seq[T]] = {
@@ -102,11 +106,13 @@ trait ReactStore[Id, T] {
       data <- smartLoad()
     } yield {
       val updatedModel = changes.foldLeft(data)((coll, e) => {
-        coll.find(x => isEqual(getId(e), getId(x))).fold {
-          coll :+ e
-        } { _ =>
-          coll.map(x => if (isEqual(getId(e), getId(x))) e else x)
-        }
+        coll
+          .find(x => isEqual(getId(e), getId(x)))
+          .fold {
+            coll :+ e
+          } { _ =>
+            coll.map(x => if (isEqual(getId(e), getId(x))) e else x)
+          }
       })
       model() = Ready(updatedModel)
       updatedModel
