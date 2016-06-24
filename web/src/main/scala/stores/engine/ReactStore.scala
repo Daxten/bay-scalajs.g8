@@ -54,6 +54,25 @@ trait ReactStore[Id, T] {
     }
   }
 
+  def reset: Callback = {
+    runningCallback match {
+      case Some(callback) =>
+        Callback.future {
+          callback map { _ =>
+            Callback {
+              runningCallback = None
+              model() = Empty
+            }
+          }
+        }
+      case None =>
+        Callback {
+          runningCallback = None
+          model() = Empty
+        }
+    }
+  }
+
   private def load(f: Future[Seq[T]]) = {
     model() = readObs.now.pending()
 
