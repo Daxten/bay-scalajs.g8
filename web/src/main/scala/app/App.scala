@@ -20,6 +20,7 @@ object App extends JSApp {
     ReactDOM.render(component(), dom.document.getElementById("root"))
 
     import autowire._
+    import shared.models.SharedDefault._
     import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
     AjaxClient[Api].now().call().map { now =>
