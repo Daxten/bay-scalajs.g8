@@ -48,8 +48,8 @@ trait ReactStore[Id, T] {
 
   def smartLoad(f: Future[Seq[T]] = initData): Future[Seq[T]] = {
     model.now match {
-      case Failed(e) => Future.failed(e)
-      case e if e.isPending => runningCallback.get
+      case Failed(e)         => Future.failed(e)
+      case e if e.isPending  => runningCallback.get
       case e if !e.isPending => load(f)
     }
   }
@@ -69,23 +69,31 @@ trait ReactStore[Id, T] {
 
     case class Props(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement)
 
-    class Backend($: BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
+    class Backend($ : BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
       def mounted(p: Props) =
-        dependantObserve[Pot[Seq[T]]](readObs, (a, b) =>
-          (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
+        dependantObserve[Pot[Seq[T]]](
+            readObs,
+            (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
           setInterval(Callback.ifTrue(now.isPending, $.forceUpdate), 1.second)
 
       def render(p: Props) = {
         now match {
-          case Failed(e) => p.failed(e)
-          case Pending(e) => p.pending(e)
-          case Ready(e) => p.ready(e)
+          case Failed(e)          => p.failed(e)
+          case Pending(e)         => p.pending(e)
+          case Ready(e)           => p.ready(e)
+          case FailedStale(t, e)  => null // TODO
+          case PendingStale(t, e) => null // TODO
+          case Unavailable        => null // TODO
+          case Empty              => null // TODO
         }
       }
     }
 
-    val component =
-      ReactComponentB[Props](s"$name-Wrapper").renderBackend[Backend].componentDidMount($ => $.backend.mounted($.props)).configure(TimerSupport.install, OnUnmount.install).build
+    val component = ReactComponentB[Props](s"$name-Wrapper")
+      .renderBackend[Backend]
+      .componentDidMount($ => $.backend.mounted($.props))
+      .configure(TimerSupport.install, OnUnmount.install)
+      .build
   }
 
   def updateOrInsertIntoStore(changed: T): Future[Seq[T]] = {
