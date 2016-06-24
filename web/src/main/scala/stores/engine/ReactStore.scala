@@ -62,15 +62,15 @@ trait ReactStore[Id, T] {
 
     f onSuccess {
       case e =>
-        model() = Ready(e)
         runningCallback = None
+        model() = Ready(e)
         e
     }
 
     f recover {
       case e: Throwable =>
-        model() = Failed(e)
         runningCallback = None
+        model() = Failed(e)
     }
 
     f
