@@ -73,6 +73,10 @@ trait ReactStore[Id, T] {
     }
   }
 
+  def refresh: Callback = reset >> Callback(access)
+
+  def refreshWith(f: Future[Seq[T]]): Callback = reset >> Callback(accessWith(f))
+
   private def load(f: Future[Seq[T]]) = {
     model() = readObs.now.pending()
 
