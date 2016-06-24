@@ -32,17 +32,25 @@ trait ReactStore[Id, T] {
 
   def access: Future[Seq[T]] = {
     (model.now, runningCallback) match {
-      case (Failed(e), _)                      => Future.failed(e)
-      case (e, Some(callback)) if e.isPending  => callback
-      case (e, Some(callback)) if !e.isPending => load(initData)
+      case (Failed(e), _)            => Future.failed(e)
+      case (_, Some(callback))       => callback
+      case (e, None) if !e.isPending => load(initData)
+      case (e, None) if e.isPending  =>
+        // Unexpected State
+        model() = Empty
+        load(initData)
     }
   }
 
   def accessWith(f: Future[Seq[T]]): Future[Seq[T]] = {
     (model.now, runningCallback) match {
-      case (Failed(e), _)                      => Future.failed(e)
-      case (e, Some(callback)) if e.isPending  => callback
-      case (e, Some(callback)) if !e.isPending => load(f)
+      case (Failed(e), _)            => Future.failed(e)
+      case (_, Some(callback))       => callback
+      case (e, None) if !e.isPending => load(f)
+      case (e, None) if e.isPending  =>
+        // Unexpected State
+        model() = Empty
+        load(f)
     }
   }
 
