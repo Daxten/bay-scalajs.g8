@@ -153,13 +153,7 @@ trait ReactStore[Id, T] {
       data <- access
     } yield {
       val updatedModel = changes.foldLeft(data)((coll, e) => {
-        coll
-          .find(x => isEqual(getId(e), getId(x)))
-          .fold {
-            coll :+ e
-          } { _ =>
-            coll.map(x => if (isEqual(getId(e), getId(x))) e else x)
-          }
+        coll.map(x => if (isEqual(getId(e), getId(x))) e else x)
       })
       model() = Ready(updatedModel)
       updatedModel
