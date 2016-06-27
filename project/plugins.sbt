@@ -8,6 +8,6 @@ addSbtPlugin("com.vmunier" % "sbt-play-scalajs" % "0.3.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.6")
 
-addSbtPlugin("com.jamesward" % "play-auto-refresh" % "0.0.13")
+addSbtPlugin("com.jamesward" % "play-auto-refresh" % "0.0.15")
 
 addSbtPlugin("com.geirsson" %% "sbt-scalafmt" % "0.2.1")
