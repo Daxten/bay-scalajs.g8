@@ -90,7 +90,7 @@ trait ReactStore[Id, T] {
         e
     }
 
-    f recover {
+    f onFailure {
       case e: Throwable =>
         runningCallback = None
         model() = Failed(e)
