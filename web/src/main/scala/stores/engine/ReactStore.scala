@@ -17,7 +17,7 @@ trait ReactStore[Id, T] {
 
   val name: String
 
-  def initData = Future.successful(Seq.empty[T])
+  def init = Future.successful(Seq.empty[T])
 
   protected val model: Var[Pot[Seq[T]]] = Var(Empty)
   private var runningCallback: Option[Future[Seq[T]]] = None
@@ -28,27 +28,16 @@ trait ReactStore[Id, T] {
   // read only access, observable access
   val readObs: Rx[Pot[Seq[T]]] = model.r
 
-  def init = Future.successful(Seq.empty)
-
-  def access: Future[Seq[T]] = {
-    (model.now, runningCallback) match {
-      case (Failed(e), _)            => Future.failed(e)
-      case (_, Some(callback))       => callback
-      case (e, None) if !e.isPending => load(initData)
-      case (e, None) if e.isPending  =>
-        // Unexpected State
-        model() = Empty
-        load(initData)
-    }
-  }
+  def access: Future[Seq[T]] = accessWith(init)
 
   def accessWith(f: Future[Seq[T]]): Future[Seq[T]] = {
     (model.now, runningCallback) match {
       case (Failed(e), _)            => Future.failed(e)
       case (_, Some(callback))       => callback
+      case (Ready(e), _)             => Future.successful(e)
       case (e, None) if !e.isPending => load(f)
-      case (e, None) if e.isPending  =>
-        // Unexpected State
+      case (e, None) if e.isPending =>
+        println(s"Unexpected Pot State on $name")
         model() = Empty
         load(f)
     }
@@ -99,31 +88,37 @@ trait ReactStore[Id, T] {
     f
   }
 
-  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement) =
-    StoreComponent.component(StoreComponent.Props(failed, pending, ready))
+  def render(failed: Throwable => ReactElement,
+             pending: Long => ReactElement,
+             empty: () => ReactElement,
+             ready: (Seq[T]) => ReactElement) =
+    StoreComponent.component(StoreComponent.Props(failed, pending, empty, ready))
 
   object StoreComponent {
 
     import scala.concurrent.duration._
 
-    case class Props(failed: Throwable => ReactElement, pending: Long => ReactElement, ready: (Seq[T]) => ReactElement)
+    case class Props(failed: Throwable => ReactElement,
+                     pending: Long => ReactElement,
+                     empty: () => ReactElement,
+                     ready: (Seq[T]) => ReactElement)
 
     class Backend($ : BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
       def mounted(p: Props) =
-        dependantObserve[Pot[Seq[T]]](
-            readObs,
-            (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
-          setInterval(Callback.ifTrue(now.isPending, $.forceUpdate), 1.second)
+        dependantObserve[Pot[Seq[T]]](readObs, (a, b) =>
+              (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady == b.isReady && a.headOption != b.headOption)) >>
+          setInterval(Callback.when(now.isPending)($.forceUpdate), 1.second) >> Callback(access)
 
       def render(p: Props) = {
         now match {
-          case Failed(e)          => p.failed(e)
-          case Pending(e)         => p.pending(e)
-          case Ready(e)           => p.ready(e)
-          case FailedStale(t, e)  => null // not used atm
-          case PendingStale(t, e) => null // not used atm
-          case Unavailable        => null // not used atm
-          case Empty              => p.ready(Seq.empty)
+          case Failed(e)              => p.failed(e)
+          case Pending(e)             => p.pending(e)
+          case Ready(e) if e.isEmpty  => p.empty()
+          case Ready(e) if e.nonEmpty => p.ready(e)
+          case FailedStale(t, e)      => null // not used atm
+          case PendingStale(t, e)     => null // not used atm
+          case Unavailable            => null // not used atm
+          case Empty                  => p.empty()
         }
       }
     }

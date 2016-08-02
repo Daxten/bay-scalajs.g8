@@ -16,14 +16,14 @@ lazy val web = (project in file("web"))
     persistLauncher := true,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "core" % "0.10.4",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.10.4",
+      "com.github.japgolly.scalajs-react" %%% "core" % "0.11.1",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1",
       "org.scala-js" %%% "scalajs-dom" % "0.8.0",
       "com.github.japgolly.fork.scalaz" %%% "scalaz-core" % "7.2.0"
     ),
     jsDependencies ++= Seq(
-      "org.webjars.bower" % "react" % "0.14.7" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-      "org.webjars.bower" % "react" % "0.14.7" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
+      "org.webjars.bower" % "react" % "15.2.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+      "org.webjars.bower" % "react" % "15.2.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
       "org.webjars.bower" % "moment" % "2.13.0" / "moment-with-locales.js" minified "moment-with-locales.min.js" commonJSName "moment",
       "org.webjars.bower" % "moment-timezone" % "0.5.3" / "moment-timezone-with-data.js" minified "moment-timezone-with-data.min.js" dependsOn "moment-with-locales.js"
     )
@@ -36,7 +36,6 @@ lazy val jsProjects = Seq(web)
 lazy val driver = (project in file("driver"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.postgresql" % "postgresql" % "9.4.1208",
       "com.github.tminglei" %% "slick-pg" % "0.14.1",
       "com.github.tminglei" %% "slick-pg_date2" % "0.14.1"
     )
@@ -54,7 +53,6 @@ lazy val server = (project in file("server"))
       jdbc,
       cache,
       ws,
-      "org.postgresql" % "postgresql" % "9.4.1208",
       "com.typesafe.slick" %% "slick" % "3.1.1",
       "com.typesafe.play" %% "play-slick" % "1.1.1",
       "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
