@@ -1,4 +1,5 @@
 import sbt.Project.projectToRef
+import Dependencies._
 
 name in ThisBuild := """Play Template"""
 
@@ -16,34 +17,31 @@ lazy val web = (project in file("web"))
     persistLauncher := true,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "core" % "0.11.1",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1",
-      "org.scala-js" %%% "scalajs-dom" % "0.8.0",
-      "com.github.japgolly.fork.scalaz" %%% "scalaz-core" % "7.2.0"
+      "com.github.japgolly.scalajs-react" %%% "core" % scalajsReact,
+      "com.github.japgolly.scalajs-react" %%% "extra" % scalajsReact,
+      "org.scala-js" %%% "scalajs-dom" % scalajsDom
     ),
     jsDependencies ++= Seq(
-      "org.webjars.bower" % "react" % "15.2.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-      "org.webjars.bower" % "react" % "15.2.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
-      "org.webjars.bower" % "moment" % "2.13.0" / "moment-with-locales.js" minified "moment-with-locales.min.js" commonJSName "moment",
-      "org.webjars.bower" % "moment-timezone" % "0.5.3" / "moment-timezone-with-data.js" minified "moment-timezone-with-data.min.js" dependsOn "moment-with-locales.js"
+      "org.webjars.bower" % "react" % react / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+      "org.webjars.bower" % "react" % react / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
+      "org.webjars.bower" % "moment" % moment / "moment-with-locales.js" minified "moment-with-locales.min.js" commonJSName "moment",
+      "org.webjars.bower" % "moment-timezone" % momentTimezone / "moment-timezone-with-data.js" minified "moment-timezone-with-data.min.js" dependsOn "moment-with-locales.js"
     )
   )
   .dependsOn(sharedJS)
-  .enablePlugins(ScalaJSPlugin, ScalaJSPlay)
-
-lazy val jsProjects = Seq(web)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val driver = (project in file("driver"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.github.tminglei" %% "slick-pg" % "0.14.1",
-      "com.github.tminglei" %% "slick-pg_date2" % "0.14.1"
+      "com.github.tminglei" %% "slick-pg" % slickPg,
+      "com.github.tminglei" %% "slick-pg_date2" % slickPg
     )
   )
 
 lazy val codegen = (project in file("codegen"))
   .settings(libraryDependencies ++= Seq(
-    "com.typesafe.slick" %% "slick-codegen" % "3.1.1"
+    "com.typesafe.slick" %% "slick-codegen" % slick
   ))
   .dependsOn(driver)
 
@@ -53,31 +51,28 @@ lazy val server = (project in file("server"))
       jdbc,
       cache,
       ws,
-      "com.typesafe.slick" %% "slick" % "3.1.1",
-      "com.typesafe.play" %% "play-slick" % "1.1.1",
-      "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
-      "jp.t2v" %% "play2-auth" % "0.14.1",
-      "org.flywaydb" %% "flyway-play" % "2.2.1"
+      "com.typesafe.slick" %% "slick" % slick,
+      "com.typesafe.play" %% "play-slick" % playSlick,
+      "com.vmunier" %% "play-scalajs-scripts" % playScalajs,
+      "jp.t2v" %% "play2-auth" % playAuth,
+      "org.flywaydb" %% "flyway-play" % flywayPlay
     ),
-    scalaJSProjects := jsProjects,
-    pipelineStages := Seq(scalaJSProd),
+    pipelineStages := Seq(scalaJSPipeline),
     routesGenerator := InjectedRoutesGenerator
   )
   .dependsOn(driver, sharedJVM)
-  .aggregate(jsProjects.map(projectToRef): _*)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "autowire" % "0.2.5",
-    "com.lihaoyi" %%% "upickle" % "0.3.6",
-    "com.lihaoyi" %%% "scalarx" % "0.3.1",
-    "me.chrons" %%% "diode-data" % "1.0.0",
-    "org.scalaz" %%% "scalaz-core" % "7.2.2"
+    "com.lihaoyi" %%% "autowire" % autowire,
+    "com.lihaoyi" %%% "upickle" % upickle,
+    "com.lihaoyi" %%% "scalarx" % scalarx,
+    "me.chrons" %%% "diode-data" % diode,
+    "org.scalaz" %%% "scalaz-core" % scalaz
   ))
-  .jsConfigure(_ enablePlugins ScalaJSPlay)
-  .jsSettings(
-  )
+  .jsConfigure(_ enablePlugins ScalaJSPlugin)
+  .jsSettings()
 
 lazy val sharedJVM = shared.jvm
 
