@@ -52,7 +52,8 @@ final class OffsetDateTime(val moment: Date) {
   }
 
   def minusNanos(n: Long): OffsetDateTime = {
-    val newMoment = Moment(toEpochMilli).subtract(n / 1000000, Units.Millisecond)
+    val newMoment =
+      Moment(toEpochMilli).subtract(n / 1000000, Units.Millisecond)
     new OffsetDateTime(newMoment)
   }
 
@@ -116,7 +117,7 @@ final class OffsetDateTime(val moment: Date) {
   override def equals(obj: Any): Boolean = {
     obj match {
       case e: OffsetDateTime => toEpochSecond == e.toEpochSecond
-      case _ => false
+      case _                 => false
     }
   }
 }

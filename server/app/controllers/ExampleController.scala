@@ -19,11 +19,11 @@ class ExampleController @com.google.inject.Inject()(val messagesApi: MessagesApi
 
   def index = Action.async { request =>
     for {
-      username <- Some("username")                              |> HttpResult.fromOption(BadRequest("Username missing from request"))
-      user     <- Future.successful(Some(BaseUser(1, "aname"))) |> HttpResult.fromFOption(NotFound("User not found"))
+      username <- Some("username")                          |> HttpResult.fromOption(BadRequest("Username missing from request"))
+      user <- Future.successful(Some(BaseUser(1, "aname"))) |> HttpResult.fromFOption(NotFound("User not found"))
       email = s"${user.name}@emailprovider.de"
-      validatedEmail <- validateEmail(email)    |> HttpResult.fromEither(InternalServerError(_))
-      success        <- Future.successful(true) |> HttpResult.fromFuture
+      validatedEmail <- validateEmail(email) |> HttpResult.fromEither(InternalServerError(_))
+      success <- Future.successful(true)     |> HttpResult.fromFuture
     } yield {
       if (success) Ok("Mail successfully sent!")
       else InternalServerError("Failed to send email :(")

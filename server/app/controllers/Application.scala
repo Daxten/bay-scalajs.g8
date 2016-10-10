@@ -8,9 +8,8 @@ import services._
 
 import scala.concurrent.ExecutionContext
 
-
 class Application @Inject()(val messagesApi: MessagesApi)(implicit val ec: ExecutionContext)
-  extends ExtendedController
+    extends ExtendedController
     with AuthConfigImpl
     with OptionalAuthElement
     with LoginLogout
@@ -40,9 +39,8 @@ class Application @Inject()(val messagesApi: MessagesApi)(implicit val ec: Execu
     val path = s.split("/")
     AutowireRouter.route[Api](new ApiService(loggedIn)) {
       autowire.Core.Request(path, read[Map[String, String]](request.body.toString()))
-    } map {
-      responseData =>
-        Ok(responseData)
+    } map { responseData =>
+      Ok(responseData)
     }
   }
 

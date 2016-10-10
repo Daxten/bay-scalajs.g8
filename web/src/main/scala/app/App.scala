@@ -11,9 +11,7 @@ import scala.scalajs.js.JSApp
 object App extends JSApp {
 
   val component =
-    ReactComponentB[Unit]("App")
-      .render(_ => AppRouter.component())
-      .buildU
+    ReactComponentB[Unit]("App").render(_ => AppRouter.component()).buildU
 
   def main(): Unit = {
     println("Application starting..")
@@ -28,6 +26,5 @@ object App extends JSApp {
       println(now.toEpochSecond)
     }
   }
-
 
 }

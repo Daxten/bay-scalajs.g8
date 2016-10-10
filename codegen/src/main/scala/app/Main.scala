@@ -22,51 +22,34 @@ object Main extends App {
     dbConfig <- config.getObject("slick.dbs")
   } yield {
     val short = dbConfig._1
-    val name = short.capitalize
+    val name  = short.capitalize
 
-    val url = config.getString(s"slick.dbs.$short.db.url")
-    val driver = config.getString(s"slick.dbs.$short.db.driver")
-    val user = config.getString(s"slick.dbs.$short.db.user")
+    val url      = config.getString(s"slick.dbs.$short.db.url")
+    val driver   = config.getString(s"slick.dbs.$short.db.driver")
+    val user     = config.getString(s"slick.dbs.$short.db.user")
     val password = config.getString(s"slick.dbs.$short.db.password")
 
     val excluded = List("schema_version")
 
     val profile = CustomizedPgDriver
-    val db = CustomizedPgDriver.api.Database.forURL(
-        url,
-        driver = "org.postgresql.Driver",
-        user = user,
-        password = password)
+    val db      = CustomizedPgDriver.api.Database.forURL(url, driver = "org.postgresql.Driver", user = user, password = password)
 
     def sourceGen =
-      db.run(profile.createModel(Option(profile.defaultTables.map(ts =>
-                        ts.filterNot(t => excluded contains t.name.name))))) map {
-        model =>
-          new CustomizedCodeGenerator(model)
+      db.run(profile.createModel(Option(profile.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))))) map { model =>
+        new CustomizedCodeGenerator(model)
       }
 
-    Await.ready(sourceGen.map(codegen =>
-                      codegen.writeToFile("bay.driver.CustomizedPgDriver",
-                                          "server/app",
-                                          "models.auto_generated",
-                                          name,
-                                          s"$name.scala")) recover {
-                  case e: Throwable => e.printStackTrace()
-                },
-                Duration.Inf)
+    Await.ready(
+      sourceGen.map(codegen => codegen.writeToFile("bay.driver.CustomizedPgDriver", "server/app", "models.auto_generated", name, s"$name.scala")) recover {
+        case e: Throwable => e.printStackTrace()
+      },
+      Duration.Inf)
 
-    val createdFile = new File(s"server/app/models/auto_generated/$name.scala")
-    val modelSource = Source.fromFile(createdFile).mkString
-    val sharedSource = modelSource
-      .split("\n")
-      .map(_.trim)
-      .filter(_.startsWith("case class"))
-      .mkString("\n  ")
+    val createdFile  = new File(s"server/app/models/auto_generated/$name.scala")
+    val modelSource  = Source.fromFile(createdFile).mkString
+    val sharedSource = modelSource.split("\n").map(_.trim).filter(_.startsWith("case class")).mkString("\n  ")
 
-    val filteredSource = modelSource
-      .split("\n")
-      .filterNot(_.trim.startsWith("case class"))
-      .mkString("\n")
+    val filteredSource = modelSource.split("\n").filterNot(_.trim.startsWith("case class")).mkString("\n")
 
     val sharedTemplate = s"""
                             |package shared.models.auto_generated
@@ -85,8 +68,7 @@ object Main extends App {
                                   |}
      """.stripMargin
 
-    val objectFile = new File(
-        s"shared/src/main/scala/shared/models/Shared$name.scala")
+    val objectFile = new File(s"shared/src/main/scala/shared/models/Shared$name.scala")
     if (objectFile.createNewFile()) {
       new PrintWriter(objectFile) {
         write(sharedObjectTemplate)
@@ -94,8 +76,7 @@ object Main extends App {
       }
     }
 
-    new PrintWriter(
-        s"shared/src/main/scala/shared/models/auto_generated/Shared$name.scala") {
+    new PrintWriter(s"shared/src/main/scala/shared/models/auto_generated/Shared$name.scala") {
       write(sharedTemplate)
       close()
     }

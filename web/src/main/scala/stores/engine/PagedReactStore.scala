@@ -34,7 +34,8 @@ trait PagedReactStore[Id, T] {
 
   def canLoadMore = now.size - 1 < count.now
 
-  def loadNext(limit: Int, useCache: Boolean = true) = dependOn(now.getOrElse(Map(-1 -> null)).keys.max + 1, limit, useCache)
+  def loadNext(limit: Int, useCache: Boolean = true) =
+    dependOn(now.getOrElse(Map(-1 -> null)).keys.max + 1, limit, useCache)
 
   def dependOn(offsetStart: Int, limit: Int, useCache: Boolean = true) = {
     model.update(model.now.pending())
@@ -60,17 +61,18 @@ trait PagedReactStore[Id, T] {
     timerId.foreach(org.scalajs.dom.window.clearTimeout)
     model.update(Empty.pending())
 
-    val id = org.scalajs.dom.window.setTimeout(() => {
-      search(query, now.getOrElse(Map.empty).keys.lastOption.getOrElse(0), 50) onSuccess {
-        case SearchResult(result, startOffset, nextOffset, max) =>
-          if (count.now != max) count.update(max)
-          val current = now.getOrElse(Map.empty)
-          val updated = result.foldLeft(current)((b, a) => {
-            b + a
-          })
-          model.update(Ready(updated))
-      }
-    }, 1000)
+    val id =
+      org.scalajs.dom.window.setTimeout(() => {
+        search(query, now.getOrElse(Map.empty).keys.lastOption.getOrElse(0), 50) onSuccess {
+          case SearchResult(result, startOffset, nextOffset, max) =>
+            if (count.now != max) count.update(max)
+            val current = now.getOrElse(Map.empty)
+            val updated = result.foldLeft(current)((b, a) => {
+              b + a
+            })
+            model.update(Ready(updated))
+        }
+      }, 1000)
 
     timerId = Some(id)
   }
@@ -85,10 +87,7 @@ trait PagedReactStore[Id, T] {
 
   def init = Future.successful(Seq.empty)
 
-  def render(failed: Throwable => ReactElement,
-             pending: Long => ReactElement,
-             empty: Boolean => ReactElement,
-             ready: (Map[Int, T], Boolean) => ReactElement) =
+  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, empty: Boolean => ReactElement, ready: (Map[Int, T], Boolean) => ReactElement) =
     StoreComponent.component(StoreComponent.Props(failed, pending, empty, ready))
 
   object StoreComponent {
@@ -103,23 +102,24 @@ trait PagedReactStore[Id, T] {
     class Backend($ : BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
       def mounted(p: Props) =
         dependantObserve[Pot[Map[Int, T]]](
-            readObs,
-            (a, b) =>
-              (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
+          readObs,
+          (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
           setInterval(Callback.when(now.isPending)($.forceUpdate), 1.second)
 
       def render(p: Props) = {
         now match {
-          case Failed(e)                       => p.failed(e)
-          case Pending(e) if now.isEmpty       => p.pending(e)
-          case Pending(e)                      => p.ready(now.get, true)
-          case Ready(e) if e.isEmpty           => p.empty(now.isPending)
-          case Ready(e)                        => p.ready(e, now.isPending)
-          case FailedStale(t, e)               => null // not used atm
-          case PendingStale(t, e) if t.isEmpty => p.empty(true) // TODO: How do we get here?
-          case PendingStale(t, e)              => p.ready(t, true) // TODO: How do we get here?
-          case Unavailable                     => null // not used atm
-          case Empty                           => p.ready(Map.empty, false)
+          case Failed(e)                 => p.failed(e)
+          case Pending(e) if now.isEmpty => p.pending(e)
+          case Pending(e)                => p.ready(now.get, true)
+          case Ready(e) if e.isEmpty     => p.empty(now.isPending)
+          case Ready(e)                  => p.ready(e, now.isPending)
+          case FailedStale(t, e)         => null // not used atm
+          case PendingStale(t, e) if t.isEmpty =>
+            p.empty(true) // TODO: How do we get here?
+          case PendingStale(t, e) =>
+            p.ready(t, true) // TODO: How do we get here?
+          case Unavailable => null // not used atm
+          case Empty       => p.ready(Map.empty, false)
         }
       }
     }

@@ -17,9 +17,8 @@ object AppRouter {
 
     (
       staticRoute(root, HomeLoc) ~> renderR(ctl => HomeScreen(ctl))
-      ).notFound(redirectToPage(HomeLoc)(Redirect.Replace))
-  }
-    .renderWith(LayoutComponent.apply)
+    ).notFound(redirectToPage(HomeLoc)(Redirect.Replace))
+  }.renderWith(LayoutComponent.apply)
 
   val component = Router(BaseUrl.fromWindowOrigin_/, routerConfig)
 }

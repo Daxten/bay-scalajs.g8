@@ -13,7 +13,7 @@ object LayoutComponent extends ReactTags {
 
   case class State()
 
-  class Backend($: BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, State]) {
 
     def mounted() = Callback.empty
 
@@ -28,11 +28,7 @@ object LayoutComponent extends ReactTags {
     }
   }
 
-  private val component = ReactComponentB[Props]("LayoutComponent")
-    .initialState(State())
-    .renderBackend[Backend]
-    .componentDidMount(_.backend.mounted())
-    .build
+  private val component = ReactComponentB[Props]("LayoutComponent").initialState(State()).renderBackend[Backend].componentDidMount(_.backend.mounted()).build
 
   def apply(c: RouterCtl[Loc], r: Resolution[Loc]) = component(Props(c, r))
 }

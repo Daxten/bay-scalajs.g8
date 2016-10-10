@@ -15,7 +15,7 @@ object HomeScreen extends ReactTags {
 
   case class State()
 
-  class Backend($: BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, State]) {
 
     import upickle.default._
     import SharedDefault._
@@ -35,11 +35,7 @@ object HomeScreen extends ReactTags {
     }
   }
 
-  private val component = ReactComponentB[Props]("HomeScreen")
-    .initialState(State())
-    .renderBackend[Backend]
-    .componentDidMount(_.backend.mounted())
-    .build
+  private val component = ReactComponentB[Props]("HomeScreen").initialState(State()).renderBackend[Backend].componentDidMount(_.backend.mounted()).build
 
   def apply(c: RouterCtl[Loc]) = component(Props(c))
 }

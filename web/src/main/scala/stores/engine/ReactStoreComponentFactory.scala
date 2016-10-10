@@ -10,17 +10,19 @@ object ReactStoreComponentFactory {
   class RenderBackend2[Id1, T1, Id2, T2]($ : BackendScope[RenderProps2[Id1, T1, Id2, T2], Unit], t1: ReactStore[Id1, T1], t2: ReactStore[Id2, T2])
       extends RxObserver($) {
 
-    def mounted(p: RenderProps2[Id1, T1, Id2, T2]) = observe(t1.readObs, t2.readObs) >> Callback.future {
-      for {
-        _ <- t1.access
-        _ <- t2.access
-      } yield Callback.empty
-    }
+    def mounted(p: RenderProps2[Id1, T1, Id2, T2]) =
+      observe(t1.readObs, t2.readObs) >> Callback.future {
+        for {
+          _ <- t1.access
+          _ <- t2.access
+        } yield Callback.empty
+      }
 
     def render(p: RenderProps2[Id1, T1, Id2, T2]): ReactElement = {
       val pots = Seq(t1, t2)
       if (pots.exists(_.now.isPending)) p.pending()
-      else if (Seq(t1, t2).forall(_.now.isReady)) p.ready(t1.now.get, t2.now.get)
+      else if (Seq(t1, t2).forall(_.now.isReady))
+        p.ready(t1.now.get, t2.now.get)
       else p.failed()
     }
 
