@@ -64,8 +64,7 @@ trait ReactStore[Id, T] {
 
   def refresh: Callback = reset >> Callback(access)
 
-  def refreshWith(f: Future[Seq[T]]): Callback =
-    reset >> Callback(accessWith(f))
+  def refreshWith(f: Future[Seq[T]]): Callback = reset >> Callback(accessWith(f))
 
   private def load(f: Future[Seq[T]]) = {
     model() = readObs.now.pending()
@@ -89,21 +88,25 @@ trait ReactStore[Id, T] {
     f
   }
 
-  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, empty: () => ReactElement, ready: (Seq[T]) => ReactElement) =
+  def render(failed: Throwable => ReactElement,
+             pending: Long => ReactElement,
+             empty: () => ReactElement,
+             ready: (Seq[T]) => ReactElement) =
     StoreComponent.component(StoreComponent.Props(failed, pending, empty, ready))
 
   object StoreComponent {
 
     import scala.concurrent.duration._
 
-    case class Props(failed: Throwable => ReactElement, pending: Long => ReactElement, empty: () => ReactElement, ready: (Seq[T]) => ReactElement)
+    case class Props(failed: Throwable => ReactElement,
+                     pending: Long => ReactElement,
+                     empty: () => ReactElement,
+                     ready: (Seq[T]) => ReactElement)
 
     class Backend($ : BackendScope[Props, Unit]) extends RxObserver($) with TimerSupport {
       def mounted(p: Props) =
-        dependantObserve[Pot[Seq[T]]](
-          readObs,
-          (a, b) =>
-            (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady == b.isReady && a.headOption != b.headOption)) >>
+        dependantObserve[Pot[Seq[T]]](readObs, (a, b) =>
+          (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady == b.isReady && a.headOption != b.headOption)) >>
           setInterval(Callback.when(now.isPending)($.forceUpdate), 1.second) >> Callback(access)
 
       def render(p: Props) = {
@@ -132,8 +135,7 @@ trait ReactStore[Id, T] {
       data <- access
     } yield {
       val updatedModel = {
-        if (data.exists(e => isEqual(getId(e), getId(changed))))
-          data.map(x => if (isEqual(getId(changed), getId(x))) changed else x)
+        if (data.exists(e => isEqual(getId(e), getId(changed)))) data.map(x => if (isEqual(getId(changed), getId(x))) changed else x)
         else data :+ changed
       }
       model() = Ready(updatedModel)

@@ -1,7 +1,5 @@
 package java.time
 
-import java.time
-
 import org.widok.moment._
 
 /**
@@ -52,8 +50,7 @@ final class OffsetDateTime(val moment: Date) {
   }
 
   def minusNanos(n: Long): OffsetDateTime = {
-    val newMoment =
-      Moment(toEpochMilli).subtract(n / 1000000, Units.Millisecond)
+    val newMoment = Moment(toEpochMilli).subtract(n / 1000000, Units.Millisecond)
     new OffsetDateTime(newMoment)
   }
 
@@ -108,7 +105,7 @@ final class OffsetDateTime(val moment: Date) {
   }
 
   def getOffset: ZoneOffset =
-    time.ZoneOffset.ofTotalSeconds(moment.utcOffset() * 60)
+    ZoneOffset.ofTotalSeconds(moment.utcOffset() * 60)
 
   def toEpochSecond: Long = moment.format("X").toLong
 
