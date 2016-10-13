@@ -23,9 +23,7 @@ lazy val web = (project in file("web"))
     ),
     jsDependencies ++= Seq(
       "org.webjars.bower" % "react"           % react / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-      "org.webjars.bower" % "react"           % react / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
-      "org.webjars.bower" % "moment"          % moment / "moment-with-locales.js" minified "moment-with-locales.min.js" commonJSName "moment",
-      "org.webjars.bower" % "moment-timezone" % momentTimezone / "moment-timezone-with-data.js" minified "moment-timezone-with-data.min.js" dependsOn "moment-with-locales.js"
+      "org.webjars.bower" % "react"           % react / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM"
     )
   )
   .dependsOn(sharedJS)
@@ -33,8 +31,8 @@ lazy val web = (project in file("web"))
 
 lazy val driver = (project in file("driver")).settings(
   libraryDependencies ++= Seq(
-    "com.github.tminglei" %% "slick-pg"       % slickPg,
-    "com.github.tminglei" %% "slick-pg_date2" % slickPg
+    "com.github.tminglei" %% "slick-pg"          % slickPg,
+    "com.github.tminglei" %% "slick-pg_threeten" % slickPg
   )
 )
 
@@ -67,11 +65,12 @@ lazy val server = (project in file("server"))
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "autowire"    % autowire,
-      "com.lihaoyi" %%% "upickle"     % upickle,
-      "com.lihaoyi" %%% "scalarx"     % scalarx,
-      "me.chrons"   %%% "diode-data"  % diode,
-      "org.scalaz"  %%% "scalaz-core" % scalaz
+      "com.lihaoyi"   %%% "autowire"        % autowire,
+      "com.lihaoyi"   %%% "upickle"         % upickle,
+      "com.lihaoyi"   %%% "scalarx"         % scalarx,
+      "me.chrons"     %%% "diode-data"      % diode,
+      "org.scalaz"    %%% "scalaz-core"     % scalaz,
+      "io.github.soc" %%% "scala-java-time" % scalaJavaTime
     ))
   .jsConfigure(_ enablePlugins ScalaJSPlugin)
   .jsSettings()

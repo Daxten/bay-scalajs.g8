@@ -15,6 +15,7 @@ trait PagedReactStore[Id, T] {
 
   import rx.Ctx.Owner.Unsafe.Unsafe
   import rx._
+  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def getId(e: T): Id
 

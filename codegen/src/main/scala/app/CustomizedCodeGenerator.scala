@@ -44,16 +44,16 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
         val jsArgs = columns
           .map(c =>
             c.exposedType match {
-              case "Option[java.time.OffsetDateTime]" =>
+              case "Option[org.threeten.bp.OffsetDateTime]" =>
                 s"${c.name}.map(_.toEpochSecond)"
-              case "Option[java.time.LocalDateTime]" =>
-                s"${c.name}.map(e => java.time.OffsetDateTime.of(e, java.time.ZoneOffset.ofHours(1)).toEpochSecond)"
-              case "java.time.OffsetDateTime" => s"${c.name}.toEpochSecond"
-              case "java.time.LocalDateTime" =>
-                s"java.time.OffsetDateTime.of(${c.name}, java.time.ZoneOffset.ofHours(1)).toEpochSecond"
-              case "Option[java.time.Duration]" =>
+              case "Option[org.threeten.bp.LocalDateTime]" =>
+                s"${c.name}.map(e => org.threeten.bp.OffsetDateTime.of(e, org.threeten.bp.ZoneOffset.ofHours(1)).toEpochSecond)"
+              case "org.threeten.bp.OffsetDateTime" => s"${c.name}.toEpochSecond"
+              case "org.threeten.bp.LocalDateTime" =>
+                s"org.threeten.bp.OffsetDateTime.of(${c.name}, org.threeten.bp.ZoneOffset.ofHours(1)).toEpochSecond"
+              case "Option[org.threeten.bp.Duration]" =>
                 s"${c.name}.map(_.getSeconds)"
-              case "java.time.Duration" => s"${c.name}.getSeconds"
+              case "org.threeten.bp.Duration" => s"${c.name}.getSeconds"
               case _                    => c.name
           })
           .mkString(", ")
@@ -68,13 +68,13 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
 
     override def Column = new Column(_) { column =>
       override def rawType: String = model.tpe match {
-        case "java.sql.Date" => "java.time.LocalDate"
-        case "java.sql.Time" => "java.time.LocalTime"
+        case "java.sql.Date" => "org.threeten.bp.LocalDate"
+        case "java.sql.Time" => "org.threeten.bp.LocalTime"
         case "java.sql.Timestamp" =>
           model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
-            case "timestamptz" => "java.time.OffsetDateTime"
-            case _             => "java.time.LocalDateTime"
-          } getOrElse "java.time.LocalDateTime"
+            case "timestamptz" => "org.threeten.bp.OffsetDateTime"
+            case _             => "org.threeten.bp.LocalDateTime"
+          } getOrElse "org.threeten.bp.LocalDateTime"
         case "String" =>
           model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
             case "hstore"   => "Map[String, String]"
@@ -82,7 +82,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
             case "_varchar" => "List[String]"
             case "geometry" => "com.vividsolutions.jts.geom.Geometry"
             case "int8[]"   => "List[Long]"
-            case "interval" => "java.time.Duration"
+            case "interval" => "org.threeten.bp.Duration"
             case e          => "String"
           } getOrElse "String"
         case _ => super.rawType.asInstanceOf[String]

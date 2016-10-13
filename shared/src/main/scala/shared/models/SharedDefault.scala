@@ -1,7 +1,6 @@
 package shared.models
 
-import java.time.{LocalDateTime, OffsetDateTime, ZoneOffset}
-
+import org.threeten.bp.{Instant, LocalDateTime, OffsetDateTime, ZoneOffset}
 import upickle.Js
 
 object SharedDefault extends shared.models.auto_generated.SharedDefault {
@@ -10,19 +9,16 @@ object SharedDefault extends shared.models.auto_generated.SharedDefault {
 
   case class BaseUser(id: Int, name: String)
 
-  val x = OffsetDateTime.now.getDayOfMonth.toString
-  val y = ZoneOffset.ofTotalSeconds(500).getTotalSeconds.toString
-
   implicit val offsetDateTime2Writer = upickle.default.Writer[OffsetDateTime] {
     case t => Js.Str(s"${t.toEpochSecond} ${t.getOffset.getTotalSeconds}")
   }
 
   implicit val thing2Reader = upickle.default.Reader[OffsetDateTime] {
     case Js.Str(str) =>
-      val Array(i, s)   = str.split(" ")
-      val zoneOffset    = ZoneOffset.ofTotalSeconds(s.toInt)
-      val localDateTime = LocalDateTime.ofEpochSecond(i.toLong, 0, zoneOffset)
-      OffsetDateTime.of(localDateTime, zoneOffset)
+      val Array(i, s) = str.split(" ")
+      val zoneOffset  = ZoneOffset.ofTotalSeconds(s.toInt)
+      val instant     = Instant.ofEpochSecond(i.toLong)
+      OffsetDateTime.ofInstant(instant, zoneOffset)
   }
 
   case class SearchResult[T](list: Map[Int, T], startOffset: Int, nextOffset: Int, count: Int)

@@ -1,7 +1,5 @@
 package components
 
-import java.time.OffsetDateTime
-
 import app.AppRouter.Loc
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}

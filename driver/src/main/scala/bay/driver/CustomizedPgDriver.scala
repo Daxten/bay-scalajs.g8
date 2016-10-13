@@ -6,7 +6,7 @@ object CustomizedPgDriver extends CustomizedPgDriver
 
 trait CustomizedPgDriver extends ExPostgresDriver
   with PgArraySupport
-  with PgDate2Support
+  with PgDateSupport2bp
   with PgEnumSupport
   with PgRangeSupport
   with PgHStoreSupport
