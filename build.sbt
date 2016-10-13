@@ -57,8 +57,9 @@ lazy val server = (project in file("server"))
       "jp.t2v"             %% "play2-auth"           % playAuth,
       "org.flywaydb"       %% "flyway-play"          % flywayPlay
     ),
-    pipelineStages  := Seq(scalaJSPipeline),
-    routesGenerator := InjectedRoutesGenerator
+    scalaJSProjects          := Seq(web),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    routesGenerator          := InjectedRoutesGenerator
   )
   .dependsOn(driver, sharedJVM)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
