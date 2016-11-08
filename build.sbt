@@ -59,7 +59,6 @@ lazy val server = (project in file("server"))
     scalaJSProjects           := Seq(web),
     pipelineStages in Assets  := Seq(scalaJSPipeline),
     routesGenerator           := InjectedRoutesGenerator,
-    PlayKeys.fileWatchService := play.runsupport.FileWatchService.sbt(pollInterval.value)
   )
   .dependsOn(driver, sharedJVM)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
