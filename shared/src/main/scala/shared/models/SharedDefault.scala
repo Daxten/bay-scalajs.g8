@@ -1,6 +1,6 @@
 package shared.models
 
-import org.threeten.bp.{Instant, LocalDateTime, OffsetDateTime, ZoneOffset}
+import org.threeten.bp.{Instant, OffsetDateTime, ZoneOffset}
 import upickle.Js
 
 object SharedDefault extends shared.models.auto_generated.SharedDefault {

@@ -22,8 +22,8 @@ lazy val web = (project in file("web"))
       "org.scala-js"                      %%% "scalajs-dom" % scalajsDom
     ),
     jsDependencies ++= Seq(
-      "org.webjars.bower" % "react"           % react / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-      "org.webjars.bower" % "react"           % react / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM"
+      "org.webjars.bower" % "react" % react / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+      "org.webjars.bower" % "react" % react / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM"
     )
   )
   .dependsOn(sharedJS)
@@ -45,6 +45,7 @@ lazy val codegen = (project in file("codegen"))
 
 lazy val server = (project in file("server"))
   .settings(
+    commands += CodegenCmd,
     libraryDependencies ++= Seq(
       jdbc,
       cache,
@@ -55,9 +56,10 @@ lazy val server = (project in file("server"))
       "jp.t2v"             %% "play2-auth"           % playAuth,
       "org.flywaydb"       %% "flyway-play"          % flywayPlay
     ),
-    scalaJSProjects          := Seq(web),
-    pipelineStages in Assets := Seq(scalaJSPipeline),
-    routesGenerator          := InjectedRoutesGenerator
+    scalaJSProjects           := Seq(web),
+    pipelineStages in Assets  := Seq(scalaJSPipeline),
+    routesGenerator           := InjectedRoutesGenerator,
+    PlayKeys.fileWatchService := play.runsupport.FileWatchService.sbt(pollInterval.value)
   )
   .dependsOn(driver, sharedJVM)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
@@ -80,3 +82,8 @@ lazy val sharedJVM = shared.jvm
 lazy val sharedJS = shared.js
 
 onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
+
+lazy val CodegenCmd = Command.command("codegen") { state =>
+  "codegen/run" ::
+    state
+}
