@@ -1,10 +1,11 @@
 package controllers
 
-import play.api.mvc.{Controller, Result}
+import play.api.data.Form
+import play.api.mvc.{Controller, Request, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
-import scalaz.{EitherT, \/, \/-}
+import scalaz.{-\/, EitherT, \/, \/-}
 import scalaz.Scalaz._
 
 /**
@@ -33,10 +34,14 @@ trait ExtendedController extends Controller {
       EitherT[Future, Result, A](foa.map(_ \/> failure))
     def fromFEither[A, B](failure: B => Result)(fva: Future[B \/ A]): HttpResult[A] =
       EitherT[Future, Result, A](fva.map(_.leftMap(failure)))
+    def fromForm[FormType](failure: Form[FormType] => Result)(form: Form[FormType])(implicit request: Request[_]) =
+      EitherT[Future, Result, FormType](form.bindFromRequest.fold(errorForm => -\/(failure(errorForm)), formEntity => \/-(formEntity)))
   }
 
   // Usefull implicit conversions
   implicit def toFuture[T](e: T): Future[T] = Future.successful(e)
   implicit def constructResult(result: HttpResult[Result]): Future[Result] =
     result.run.map { _.fold(identity, identity) }
+  implicit def constructFromResultFromEither(result: EitherT[Future, Result, Future[Result]]): Future[Result] =
+    result.run.flatMap(_.fold(Future.successful, identity))
 }
