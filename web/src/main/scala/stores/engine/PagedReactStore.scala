@@ -33,7 +33,7 @@ trait PagedReactStore[Id, T] {
 
   var timerId: Option[Int] = None
 
-  def canLoadMore = now.size - 1 < count.now
+  def canLoadMore = now.size < count.now
 
   def loadNext(limit: Int, useCache: Boolean = true) = dependOn(now.getOrElse(Map(-1 -> null)).keys.max + 1, limit, useCache)
 
@@ -86,10 +86,7 @@ trait PagedReactStore[Id, T] {
 
   def init = Future.successful(Seq.empty)
 
-  def render(failed: Throwable => ReactElement,
-             pending: Long => ReactElement,
-             empty: Boolean => ReactElement,
-             ready: (Map[Int, T], Boolean) => ReactElement) =
+  def render(failed: Throwable => ReactElement, pending: Long => ReactElement, empty: Boolean => ReactElement, ready: (Map[Int, T], Boolean) => ReactElement) =
     StoreComponent.component(StoreComponent.Props(failed, pending, empty, ready))
 
   object StoreComponent {
@@ -105,8 +102,7 @@ trait PagedReactStore[Id, T] {
       def mounted(p: Props) =
         dependantObserve[Pot[Map[Int, T]]](
           readObs,
-          (a, b) =>
-            (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
+          (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
           setInterval(Callback.when(now.isPending)($.forceUpdate), 1.second)
 
       def render(p: Props) = {
