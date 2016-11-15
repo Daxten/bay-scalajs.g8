@@ -32,7 +32,7 @@ lazy val web = (project in file("web"))
 lazy val driver = (project in file("driver")).settings(
   libraryDependencies ++= Seq(
     "com.github.tminglei" %% "slick-pg"          % slickPg,
-    "com.github.tminglei" %% "slick-pg_threeten" % slickPg
+    "io.github.soc"       %% "scala-java-time"   % scalaJavaTime
   )
 )
 
@@ -58,7 +58,7 @@ lazy val server = (project in file("server"))
     ),
     scalaJSProjects           := Seq(web),
     pipelineStages in Assets  := Seq(scalaJSPipeline),
-    routesGenerator           := InjectedRoutesGenerator,
+    routesGenerator           := InjectedRoutesGenerator
   )
   .dependsOn(driver, sharedJVM)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)

@@ -20,5 +20,5 @@ object Dependencies {
   val scalarx       = "0.3.1" // https://github.com/lihaoyi/scala.rx
   val diode         = "1.0.0" // https://github.com/ochrons/diode
   val scalaz        = "7.2.6"
-  val scalaJavaTime = "2.0.0-M3" // https://github.com/soc/scala-java-time
+  val scalaJavaTime = "2.0.0-M5" // https://github.com/soc/scala-java-time
 }
