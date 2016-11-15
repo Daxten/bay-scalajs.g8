@@ -12,12 +12,12 @@ object Dependencies {
   val scalajsDom   = "0.9.0" // https://scala-js.github.io/scala-js-dom/
 
   // jsDependencies
-  val react          = "15.3.2" //
+  val react = "15.3.2" //
 
   // Shared Dependencies
   val autowire      = "0.2.5" // https://github.com/lihaoyi/autowire
   val upickle       = "0.4.1" // http://www.lihaoyi.com/upickle-pprint/upickle/
-  val scalarx       = "0.3.1" // https://github.com/lihaoyi/scala.rx
+  val scalarx       = "0.3.2" // https://github.com/lihaoyi/scala.rx
   val diode         = "1.0.0" // https://github.com/ochrons/diode
   val scalaz        = "7.2.6"
   val scalaJavaTime = "2.0.0-M5" // https://github.com/soc/scala-java-time
