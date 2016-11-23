@@ -1,8 +1,9 @@
-package engine
+package stores.engine
 
 import diode.data._
 import japgolly.scalajs.react.extra.{OnUnmount, TimerSupport}
 import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactElement}
+import shared.models.ApiModel.{SortMethod, VisitProperty}
 import shared.models.SharedDefault.SearchResult
 import utils.RxObserver
 
@@ -11,11 +12,10 @@ import scala.concurrent.Future
 /**
   * Created by Haak on 24.06.2016.
   */
-trait PagedReactStore[Id, T] {
+trait PagedReactStore[Id, T, S] {
 
   import rx.Ctx.Owner.Unsafe.Unsafe
   import rx._
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def getId(e: T): Id
 
@@ -25,11 +25,23 @@ trait PagedReactStore[Id, T] {
 
   val query: Var[String] = Var("")
 
+  def initSortMethod: SortMethod[S]
+
+  val sort: Var[SortMethod[S]] = Var(initSortMethod)
+
   val count: Var[Int] = Var(0)
 
   protected val model: Var[Pot[Map[Int, T]]] = Var(Empty)
 
-  def search(query: String, offset: Int, take: Int): Future[SearchResult[T]]
+  def updateIfExists(entity: T) = Callback {
+    model.update(now.map(e =>
+      e.find(e => getId(e._2) == getId(entity)) match {
+        case None                   => e
+        case Some((idx, oldEntity)) => e + (idx -> entity)
+      }))
+  }
+
+  def search(query: String, sort: SortMethod[S], offset: Int, take: Int): Future[SearchResult[T]]
 
   var timerId: Option[Int] = None
 
@@ -43,7 +55,7 @@ trait PagedReactStore[Id, T] {
     if (useCache && (offsetStart to offsetStart + limit).forall(id => model.now.getOrElse(Map.empty).keys.exists(_ == id))) {
       println("Skipping Search and using Cache")
     } else {
-      search(query.now, offsetStart, limit) onSuccess {
+      search(query.now, sort.now, offsetStart, limit) onSuccess {
         case SearchResult(result, startOffset, nextOffset, max) =>
           if (count.now != max) count.update(max)
 
@@ -58,13 +70,22 @@ trait PagedReactStore[Id, T] {
   }
 
   query.foreach { query =>
+    update(query, sort.now)
+  }
+
+  sort.foreach { sort =>
+    update(query.now, sort)
+  }
+
+  private def update(query: String, sort: SortMethod[S]) = {
     timerId.foreach(org.scalajs.dom.window.clearTimeout)
     model.update(Empty.pending())
 
     val id = org.scalajs.dom.window.setTimeout(() => {
-      search(query, now.getOrElse(Map.empty).keys.lastOption.getOrElse(0), 50) onSuccess {
+      search(query, sort, now.getOrElse(Map.empty).keys.lastOption.getOrElse(0), 50) onSuccess {
         case SearchResult(result, startOffset, nextOffset, max) =>
           if (count.now != max) count.update(max)
+
           val current = now.getOrElse(Map.empty)
           val updated = result.foldLeft(current)((b, a) => {
             b + a
@@ -103,7 +124,7 @@ trait PagedReactStore[Id, T] {
         dependantObserve[Pot[Map[Int, T]]](
           readObs,
           (a, b) => (a.isReady != b.isReady) || (a.isPending != b.isPending) || (a.isFailed != b.isFailed) || (a.isReady && b.isReady && a.get != b.get)) >>
-          setInterval(Callback.when(now.isPending)($.forceUpdate), 1.second)
+          setInterval(Callback.when(now.isPending && $.isMounted())($.forceUpdate), 1.second)
 
       def render(p: Props) = {
         now match {
@@ -127,4 +148,5 @@ trait PagedReactStore[Id, T] {
       .configure(TimerSupport.install, OnUnmount.install)
       .build
   }
+
 }
