@@ -31,22 +31,16 @@ lazy val web = (project in file("web"))
 
 lazy val driver = (project in file("driver")).settings(
   libraryDependencies ++= Seq(
-    "com.github.tminglei" %% "slick-pg"        % slickPg,
-    "io.github.soc"       %% "scala-java-time" % scalaJavaTime
+    "com.github.tminglei" %% "slick-pg"          % slickPg,
+    "io.github.soc"       %% "scala-java-time"   % scalaJavaTime
   )
 )
 
 lazy val codegen = (project in file("codegen"))
-  .settings(libraryDependencies ++= Seq(
-              "com.typesafe.slick" %% "slick-codegen" % slick,
-              "org.scalameta"      %% "scalameta"     % "1.3.0"
-            ),
-            libraryDependencies ++= Seq(
-              "io.circe" %% "circe-core",
-              "io.circe" %% "circe-generic",
-              "io.circe" %% "circe-parser"
-            ).map(_ % "0.6.1"),
-            mainClass in (Compile, run) := Some("app.Main"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick-codegen" % slick
+    ))
   .dependsOn(driver)
 
 lazy val server = (project in file("server"))
@@ -62,14 +56,9 @@ lazy val server = (project in file("server"))
       "jp.t2v"             %% "play2-auth"           % playAuth,
       "org.flywaydb"       %% "flyway-play"          % flywayPlay
     ),
-    libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core",
-      "io.circe" %% "circe-generic",
-      "io.circe" %% "circe-parser"
-    ).map(_ % "0.6.1"),
-    scalaJSProjects          := Seq(web),
-    pipelineStages in Assets := Seq(scalaJSPipeline),
-    routesGenerator          := InjectedRoutesGenerator
+    scalaJSProjects           := Seq(web),
+    pipelineStages in Assets  := Seq(scalaJSPipeline),
+    routesGenerator           := InjectedRoutesGenerator
   )
   .dependsOn(driver, sharedJVM)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
