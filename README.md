@@ -14,7 +14,7 @@ cd into your project folder, then type `sbt codegen`. If you setuped everything 
 ## ReactStores
 ReactStore is a new library under-development which will be extracted into it's own project hopefully. It tries to eliminate boilerplate when creating flux-like stores and handle their state. 
 
-```
+```scala
 // A Simple Collection
 
 // Model, must live inside the shared modul
