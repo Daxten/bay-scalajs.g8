@@ -3,7 +3,7 @@ package stores.engine
 import diode.data._
 import japgolly.scalajs.react.extra.{OnUnmount, TimerSupport}
 import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactElement}
-import shared.models.ApiModel.{SortMethod, VisitProperty}
+import shared.models.ApiModel.SortMethod
 import shared.models.SharedDefault.SearchResult
 import utils.RxObserver
 

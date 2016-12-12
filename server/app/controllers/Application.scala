@@ -5,6 +5,7 @@ import jp.t2v.lab.play2.auth.{LoginLogout, OptionalAuthElement}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 import services._
+import io.circe.JsonObject
 
 import scala.concurrent.ExecutionContext
 
@@ -15,7 +16,8 @@ class Application @Inject()(val messagesApi: MessagesApi)(implicit val ec: Execu
     with LoginLogout
     with I18nSupport {
 
-  import upickle.default._
+  import io.circe.parser._
+  import io.circe.syntax._
   import shared.models.SharedDefault._
 
   def index(path: String) = StackAction { implicit request =>
@@ -38,7 +40,12 @@ class Application @Inject()(val messagesApi: MessagesApi)(implicit val ec: Execu
   def api(s: String) = AsyncStack(parse.json) { implicit request =>
     val path = s.split("/")
     AutowireRouter.route[Api](new ApiService(loggedIn)) {
-      autowire.Core.Request(path, read[Map[String, String]](request.body.toString()))
+      val routed = for {
+        json <- io.circe.parser.parse(request.body.toString()).right
+        mapped <- json.as[Map[String, String]].right
+      } yield autowire.Core.Request(path, mapped)
+
+      routed.right.get
     } map { responseData =>
       Ok(responseData)
     }

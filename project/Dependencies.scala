@@ -1,14 +1,14 @@
 object Dependencies {
   // Server (jvm)
-  val slickPg     = "0.14.3"
-  val slick       = "3.1.1"
-  val playSlick   = "2.0.0"
+  val slickPg     = "0.14.3" // https://github.com/tminglei/slick-pg
+  val slick       = "3.1.1" // http://slick.lightbend.com/
+  val playSlick   = "2.0.0" // https://github.com/playframework/play-slick
   val playScalajs = "0.3.0" // https://github.com/vmunier/scalajs-scripts
   val playAuth    = "0.14.2" // https://github.com/t2v/play2-auth
   val flywayPlay  = "3.0.1" // https://github.com/flyway/flyway-play
 
   // ScalaJs
-  val scalajsReact = "0.11.2" //
+  val scalajsReact = "0.11.3" // https://github.com/japgolly/scalajs-react/blob/master/doc/USAGE.md
   val scalajsDom   = "0.9.0" // https://scala-js.github.io/scala-js-dom/
 
   // jsDependencies
@@ -21,4 +21,8 @@ object Dependencies {
   val diode         = "1.0.0" // https://github.com/ochrons/diode
   val scalaz        = "7.2.6"
   val scalaJavaTime = "2.0.0-M5" // https://github.com/soc/scala-java-time
+  val circeVersion  = "0.6.1" // https://circe.github.io/circe
+
+  // Compiler
+  val scalajs = "0.6.13" // https://www.scala-js.org/
 }

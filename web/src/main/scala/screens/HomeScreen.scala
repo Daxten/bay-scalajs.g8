@@ -1,10 +1,12 @@
 package screens
 
 import app.AppRouter.Loc
+import autowire._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
-import org.threeten.bp.{LocalDateTime, OffsetDateTime, ZoneOffset}
+import services.{AjaxClient, Api}
 import utils.ReactTags
+import shared.models.SharedDefault._
 
 object HomeScreen extends ReactTags {
 
@@ -14,7 +16,9 @@ object HomeScreen extends ReactTags {
 
   class Backend($ : BackendScope[Props, State]) {
 
-    def mounted() = Callback.empty
+    def mounted() = Callback {
+      AjaxClient[Api].now().call().foreach(time => println(time.toString()))
+    }
 
     def render(props: Props, state: State) = {
       <.div(

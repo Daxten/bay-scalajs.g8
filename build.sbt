@@ -29,19 +29,22 @@ lazy val web = (project in file("web"))
   .dependsOn(sharedJS)
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
-lazy val driver = (project in file("driver")).settings(
-  libraryDependencies ++= Seq(
-    "com.github.tminglei" %% "slick-pg"          % slickPg,
-    "io.github.soc"       %% "scala-java-time"   % scalaJavaTime
+lazy val dbdriver = (project in file("dbdriver"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick"  %% "slick"               % slick,
+      "com.github.tminglei" %% "slick-pg"            % slickPg,
+      "com.github.tminglei" %% "slick-pg_circe-json" % slickPg
+    )
   )
-)
+  .dependsOn(sharedJVM)
 
 lazy val codegen = (project in file("codegen"))
   .settings(
     libraryDependencies ++= Seq(
       "com.typesafe.slick" %% "slick-codegen" % slick
     ))
-  .dependsOn(driver)
+  .dependsOn(dbdriver)
 
 lazy val server = (project in file("server"))
   .settings(
@@ -56,22 +59,24 @@ lazy val server = (project in file("server"))
       "jp.t2v"             %% "play2-auth"           % playAuth,
       "org.flywaydb"       %% "flyway-play"          % flywayPlay
     ),
-    scalaJSProjects           := Seq(web),
-    pipelineStages in Assets  := Seq(scalaJSPipeline),
-    routesGenerator           := InjectedRoutesGenerator
+    scalaJSProjects          := Seq(web),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    routesGenerator          := InjectedRoutesGenerator
   )
-  .dependsOn(driver, sharedJVM)
+  .dependsOn(dbdriver)
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi"   %%% "autowire"        % autowire,
-      "com.lihaoyi"   %%% "upickle"         % upickle,
       "com.lihaoyi"   %%% "scalarx"         % scalarx,
       "me.chrons"     %%% "diode-data"      % diode,
       "org.scalaz"    %%% "scalaz-core"     % scalaz,
-      "io.github.soc" %%% "scala-java-time" % scalaJavaTime
+      "io.github.soc" %%% "scala-java-time" % scalaJavaTime,
+      "io.circe"      %%% "circe-core"      % circeVersion,
+      "io.circe"      %%% "circe-generic"   % circeVersion,
+      "io.circe"      %%% "circe-parser"    % circeVersion
     ))
   .jsConfigure(_ enablePlugins ScalaJSPlugin)
   .jsSettings()

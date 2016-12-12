@@ -1,0 +1,10 @@
+web-server:
+  image: 1science/sbt
+  ports:
+    - "9000:9000"
+    - "9001:9001"
+  volumes:
+    - .:/src
+    - $HOME/.ivy2:/root/.ivy2
+  entrypoint:
+    - sbt clean ~run

@@ -1,7 +1,8 @@
 package shared.models
 
+import io.circe.{Decoder, Encoder, HCursor, Json}
 import org.threeten.bp.{Instant, OffsetDateTime, ZoneOffset}
-import upickle.Js
+import cats.syntax.either._
 
 object SharedDefault extends shared.models.auto_generated.SharedDefault {
 
@@ -9,16 +10,15 @@ object SharedDefault extends shared.models.auto_generated.SharedDefault {
 
   case class BaseUser(id: Int, name: String)
 
-  implicit val offsetDateTime2Writer = upickle.default.Writer[OffsetDateTime] {
-    case t => Js.Str(s"${t.toEpochSecond} ${t.getOffset.getTotalSeconds}")
-  }
+  implicit val encodeOffsetDateTime: Encoder[OffsetDateTime] = Encoder.encodeString.contramap[OffsetDateTime](t => s"${t.toEpochSecond} ${t.getOffset.getTotalSeconds}")
 
-  implicit val thing2Reader = upickle.default.Reader[OffsetDateTime] {
-    case Js.Str(str) =>
-      val Array(i, s) = str.split(" ")
-      val zoneOffset  = ZoneOffset.ofTotalSeconds(s.toInt)
-      val instant     = Instant.ofEpochSecond(i.toLong)
-      OffsetDateTime.ofInstant(instant, zoneOffset)
+  implicit val decodeOffsetDateTime: Decoder[OffsetDateTime] = Decoder.decodeString.emap { str =>
+    val Array(i, s) = str.split(" ")
+    val zoneOffset  = ZoneOffset.ofTotalSeconds(s.toInt)
+    val instant     = Instant.ofEpochSecond(i.toLong)
+    val offsetDateTime = OffsetDateTime.ofInstant(instant, zoneOffset)
+
+    Either.catchNonFatal(offsetDateTime).leftMap(t => "OffsetDateTime")
   }
 
   case class SearchResult[T](list: Map[Int, T], startOffset: Int, nextOffset: Int, count: Int)

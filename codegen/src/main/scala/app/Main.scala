@@ -29,7 +29,7 @@ object Main extends App {
     val user     = config.getString(s"slick.dbs.$short.db.user")
     val password = config.getString(s"slick.dbs.$short.db.password")
 
-    val excluded = List("schema_version")
+    val excluded = List("schema_version") ++ config.getStringList(s"slick.dbs.$short.db.exclude")
 
     val profile = CustomizedPgDriver
     val db      = CustomizedPgDriver.api.Database.forURL(url, driver = "org.postgresql.Driver", user = user, password = password)
@@ -40,12 +40,13 @@ object Main extends App {
       }
 
     Await.ready(
-      sourceGen.map(codegen => codegen.writeToFile("bay.driver.CustomizedPgDriver", "server/app", "models.auto_generated", name, s"$name.scala")) recover {
+      sourceGen.map(codegen => codegen.writeToFile("bay.driver.CustomizedPgDriver", "dbdriver/src/main/scala", "models.auto_generated.slick", name, s"$name.scala")) recover {
         case e: Throwable => e.printStackTrace()
       },
       Duration.Inf)
 
-    val createdFile  = new File(s"server/app/models/auto_generated/$name.scala")
+    val createdFile  = new File(s"dbdriver/src/main/scala/models/auto_generated/slick/$name.scala")
+    createdFile.getParentFile.mkdirs
     val modelSource  = Source.fromFile(createdFile).mkString
     val sharedSource = modelSource.split("\n").map(_.trim).filter(_.startsWith("case class")).mkString("\n  ")
 

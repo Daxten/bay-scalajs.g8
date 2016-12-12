@@ -1,7 +1,7 @@
 package app
 
 import slick.codegen.SourceCodeGenerator
-import slick.profile.SqlProfile.ColumnOption
+import slick.sql.SqlProfile.ColumnOption
 import slick.{model => m}
 
 class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(model) {
@@ -41,23 +41,6 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
               ))
           .mkString(", ")
 
-        val jsArgs = columns
-          .map(c =>
-            c.exposedType match {
-              case "Option[org.threeten.bp.OffsetDateTime]" =>
-                s"${c.name}.map(_.toEpochSecond)"
-              case "Option[org.threeten.bp.LocalDateTime]" =>
-                s"${c.name}.map(e => org.threeten.bp.OffsetDateTime.of(e, org.threeten.bp.ZoneOffset.ofHours(1)).toEpochSecond)"
-              case "org.threeten.bp.OffsetDateTime" => s"${c.name}.toEpochSecond"
-              case "org.threeten.bp.LocalDateTime" =>
-                s"org.threeten.bp.OffsetDateTime.of(${c.name}, org.threeten.bp.ZoneOffset.ofHours(1)).toEpochSecond"
-              case "Option[org.threeten.bp.Duration]" =>
-                s"${c.name}.map(_.getSeconds)"
-              case "org.threeten.bp.Duration" => s"${c.name}.getSeconds"
-              case _                    => c.name
-          })
-          .mkString(", ")
-
         val prns = parents.map(" with " + _).mkString("")
 
         s"""
@@ -77,6 +60,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
           } getOrElse "org.threeten.bp.LocalDateTime"
         case "String" =>
           model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
+            case "json" | "jsonb" => "io.circe.Json"
             case "hstore"   => "Map[String, String]"
             case "_text"    => "List[String]"
             case "_varchar" => "List[String]"
@@ -106,8 +90,8 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
        |
        |trait $container${parentType.map(t => s" extends $t").getOrElse("")} {
        |
-       |  val driver = CustomizedPgDriver
-       |  import driver.api._
+       |  val profile = CustomizedPgDriver
+       |  import profile.api._
        |
        |  ${indent(code.replace("$CONTAINER", container))}
        |
