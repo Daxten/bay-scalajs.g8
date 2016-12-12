@@ -42,24 +42,22 @@ object Store {
 }
 
 // You also get a Component to Render the Store, it will update on changes automatically
-<.div(
-    Store.contacts.render(
-        error => <.span(error.getMessage),   // Throwable Error
-        pending => <.span(s"pending for $pending ms"),
-        <.div("Store is Ready and Empty"),  // lazy
-        contacts => {
-            <.table(
-                <.tbody(
-                    contacts.map { contact =>
-                        <.tr(
-                            <.td(contact.key),
-                            <.td(contact.name)
-                        )
-                    }
-                )
+Store.contacts.render(
+    error => <.span(error.getMessage),   // Throwable Error
+    pending => <.span(s"pending for $pending ms"),
+    <.div("Store is Ready and Empty"),  // lazy
+    contacts => {
+        <.table(
+            <.tbody(
+                contacts.map { contact =>
+                    <.tr(
+                        <.td(contact.key),
+                        <.td(contact.name)
+                    )
+                }
             )
-        }
-    )
+        )
+    }
 )
 ```
 
