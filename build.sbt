@@ -1,7 +1,7 @@
 import sbt.Project.projectToRef
 import Dependencies._
 
-name in ThisBuild := """Play Template"""
+name in ThisBuild := """$name$"""
 
 version in ThisBuild := "0.1-SNAPSHOT"
 
