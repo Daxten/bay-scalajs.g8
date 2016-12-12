@@ -1,3 +1,5 @@
+> This Template is not 'officially' released yet, I use it for all of my projects and update it when I find time, I will make this release-ready in the future
+
 # bay-scalajs.g8
 This Template tries to eliminate all boilerplate and create some best-practices and guidelines to make web development in scala more straight forward.
 
@@ -60,5 +62,3 @@ Store.contacts.render(
     }
 )
 ```
-
-> This Template is not 'officially' released yet, I use it for all of my projects and update it when I find time, I will make this release-ready in the future
