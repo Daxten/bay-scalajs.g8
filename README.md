@@ -1,12 +1,12 @@
-# BayTemplate-ScalaJs
-A ScalaJs Template with scaffolding, postgres, scalajs-react and play-framework in the backend
+# bay-scalajs.g8
+This Template tries to eliminate all boilerplate and create some best-practices and guidelines to make web development in scala more straight forward.
 
-## Opinionated
-This Template is opinionated and uses Postgres as the database engine.
+## Dependencies / Install Instructions
+To use this template you only have to install the java8 sdk and the newest version of sbt(0.13.13+). A local postgres database is also recommended.
 
-## Codegen
-To start a codegeneration task for all databases defined inside your application.conf run:
-```
-$ sbt "project codegen" run
-```
-> (TODO: This Template is not auto generating models on compile and puts the models into the vcs, this should not change in my opinion, add text about this here and/or change it if someone has some good arguments about this)
+> docker-compose will be available in the future
+
+## Getting Started
+cd into your workspace root, then type `sbt new daxten/bay-scalajs.g8` and follow the instructions. A new folder, named after your project, will be created.
+
+cd into your project folder, then type `sbt codegen`. If you setuped everything correctly your database classes will be scaffolded into the project.
