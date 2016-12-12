@@ -16,15 +16,16 @@ cd into your project folder, then type `sbt codegen`. If you setuped everything 
 ## ReactStores
 ReactStore is a new library under-development which will be extracted into it's own project hopefully. It tries to eliminate boilerplate when creating flux-like stores and handle their state. 
 
+model must live inside the shared module
 ```scala
-// A Simple Collection
-
-// Model, must live inside the shared modul
 case class Contact(key: String, name: String, telephone: String)
+```
 
-// Use autowire (see example in Api.scala) to wire client/server
+Use autowire (see example in Api.scala) to wire client/server
 
-// Client Side
+client side code
+
+```scala
 object Store {
     val contacts = new ReactStore[String, Contact] {
         override val name: String = "Contact Store"
@@ -42,8 +43,11 @@ object Store {
         }
     }
 }
+```
 
-// You also get a Component to Render the Store, it will update on changes automatically
+You also get a Component to Render the Store, it will update on changes automatically
+
+```scala
 Store.contacts.render(
     error => <.span(error.getMessage),   // Throwable Error
     pending => <.span(s"pending for $pending ms"),
