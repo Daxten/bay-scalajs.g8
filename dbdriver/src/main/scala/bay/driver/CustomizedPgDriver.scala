@@ -12,7 +12,7 @@ trait CustomizedPgDriver
     with PgRangeSupport
     with PgHStoreSupport
     with PgSearchSupport
-    with PgCirceJsonSupport {
+    with NewPgCirceJsonSupport {
 
   override val api = new MyAPI {}
 

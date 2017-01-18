@@ -15,8 +15,8 @@ object Dependencies {
   val react = "15.3.2" //
 
   // Shared Dependencies
-  val autowire      = "0.2.5" // https://github.com/lihaoyi/autowire
-  val upickle       = "0.4.1" // http://www.lihaoyi.com/upickle-pprint/upickle/
+  val autowire      = "0.2.6" // https://github.com/lihaoyi/autowire
+  val upickle       = "0.4.3" // http://www.lihaoyi.com/upickle-pprint/upickle/
   val scalarx       = "0.3.2" // https://github.com/lihaoyi/scala.rx
   val diode         = "1.0.0" // https://github.com/ochrons/diode
   val scalaz        = "7.2.6"
@@ -24,5 +24,8 @@ object Dependencies {
   val circeVersion  = "0.6.1" // https://circe.github.io/circe
 
   // Compiler
-  val scalajs = "0.6.13" // https://www.scala-js.org/
+  val scalajs = "0.6.14" // https://www.scala-js.org/
+
+  // Codegen only
+  val flyway = "4.0.3" // https://flywaydb.org/documentation/api/
 }

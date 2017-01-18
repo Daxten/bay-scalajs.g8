@@ -1,10 +1,9 @@
 package app
 
 import java.io.{File, PrintWriter}
-
 import bay.driver.CustomizedPgDriver
 import com.typesafe.config.ConfigFactory
-
+import org.flywaydb.core.Flyway
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.io.Source
@@ -33,6 +32,15 @@ object Main extends App {
 
     val profile = CustomizedPgDriver
     val db      = CustomizedPgDriver.api.Database.forURL(url, driver = "org.postgresql.Driver", user = user, password = password)
+
+    println("Migrating using flyway..")
+    val flyway = new Flyway
+    flyway.setDataSource(url, user, password)
+    flyway.setValidateOnMigrate(false)  // Creates problems with windows machines
+    flyway.setLocations(s"filesystem:server/conf/db/migrations/$short")
+    flyway.migrate()
+
+    println("Starting codegen..")
 
     def sourceGen =
       db.run(profile.createModel(Option(profile.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))))) map { model =>

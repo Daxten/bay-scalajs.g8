@@ -1,7 +1,7 @@
 package app
 
 import slick.codegen.SourceCodeGenerator
-import slick.sql.SqlProfile.ColumnOption
+import slick.profile.SqlProfile.ColumnOption
 import slick.{model => m}
 
 class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(model) {
