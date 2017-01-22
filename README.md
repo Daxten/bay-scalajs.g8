@@ -74,6 +74,10 @@ val f: Future[Option[String]] = o.asFuture
 
 Contains Encoder/Decoder for uPickle and Circe. You will want to import / extend this when talking to the Api.
 
+`utils.ReactTags`
+
+Simply extend this trait to get vdom into scope. I've created since the package name is way too long to remember for me.
+
 ## Why Circe AND uPickle?
 uPickle works better for Client/Server communication using autowire (I had problems with Circe and sealed traits).
 
