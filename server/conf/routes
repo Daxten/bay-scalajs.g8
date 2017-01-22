@@ -6,6 +6,7 @@
 GET         /                    controllers.Application.index(path = "")
 POST        /api/*path           controllers.Application.api(path)
 
+GET         /login               controllers.Application.index(path = "")
 POST        /login               controllers.Application.login
 GET         /logout              controllers.Application.logout
 

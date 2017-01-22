@@ -27,21 +27,21 @@ class Application @Inject()(val messagesApi: MessagesApi, val userDao: UserDao)(
       case Some(user) =>
         Ok(views.html.index())
       case None =>
-        Ok(views.html.login(loginForm))
+        Ok(views.html.login(loginForm.fill(LoginForm("test@test.de", "testpw"))))
     }
   }
 
   val loginForm = Form(
     mapping(
-      "email"    -> text,
-      "password" -> text
+      "email"    -> nonEmptyText,
+      "password" -> nonEmptyText
     )(LoginForm.apply)(LoginForm.unapply)
   )
 
   def login: Action[AnyContent] = Action.async { implicit request =>
     val result = for {
       form <- loginForm.bindFromRequest() |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
-      userId <- userDao.maybeLogin(form)  |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm)))
+      userId <- userDao.maybeLogin(form)  |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm.fill(form).withGlobalError("bad.password"))))
     } yield gotoLoginSucceeded(userId)
 
     constructResultWithF(result)
