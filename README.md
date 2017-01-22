@@ -11,58 +11,70 @@ To use this template you only have to install the java8 sdk and the newest versi
 ## Getting Started
 cd into your workspace root, then type `sbt new daxten/bay-scalajs.g8` and follow the instructions. A new folder, named after your project, will be created.
 
-cd into your project folder, then type `sbt codegen`. If you setuped everything correctly your database classes will be scaffolded into the project.
+## Available Commands
+``sbt codegen``
 
-## ReactStores
-ReactStore is a new library under-development which will be extracted into it's own project hopefully. It tries to eliminate boilerplate when creating flux-like stores and handle their state. 
+Runs migrations and scaffolds the configured database into
+* case classes inside the shared module
+* slick schemas inside the dbdriver project
 
-model must live inside the shared module
-```scala
-case class Contact(key: String, name: String, telephone: String)
+``sbt codegen-re``
+
+similar to `sbt-codegen`, but removes the database first. This helps when changing the newest schema while it's not yet in source control / production. 
+
+> The codegen also works with multiple configured databases. It also tries to create a new database if it does not exist yet.
+
+## Used Libaries
+You can find a complete list inside `project/Dependencies.scala`. I don't use any RC, M or pre-release libraries for this template. 
+`scala-java-time` is the only exception since there is no release for scalajs yet and it's working really well already (with the exception of timezones, which are not yet supported)
+
+Talking about time, you will have to import `org.threeten.bp` for time, this will change in the future since `scala-java-time` already supports `java.time` imports.
+
+
+## Structure
+All Api calls using Autowire should use 
+
+`type ApiResult[T] = Future[\/[ApiError, T]]` 
+
+as the result type. You can take a look at `web/components/LoremIpsumComponent.scala` and `web/components/SimpleApiComponent.scala` on how to work with this type.
+
+These components also show how to create generic components with scalajs-react, which isn't straightforward but eliminates some boilerplate, I've also added a `TestComponent` which logs its lifecycle to check if components inside these get reused (they do).
+
+Application.scala also has an example how to use the monad-transformers inside the ExtendedController.
+
+> shoutout to Erik Bakker, take a look at his talk: https://www.youtube.com/watch?v=hGMndafDcc8
+
 ```
-
-Use autowire (see example in Api.scala) to wire client/server
-
-client side code
-
-```scala
-object Store {
-    val contacts = new ReactStore[String, Contact] {
-        override val name: String = "Contact Store"
-        override def getId(e: ContactStack): String = e.key
-        override def init: Future[Seq[ContactStack]] = AjaxClient[Api].getContacts().call()
-
-        // Add methods to change the store
-        def update(contact: Contact): Callback = Callback.future {
-          AjaxClient[Api].updateContact(contact).call() map {
-            case \/-(updatedContact) =>
-              updateOrInsertIntoStore(updatedContact)
-            case _ => 
-              Callback.empty
-          }
-        }
-    }
+def login: Action[AnyContent] = Action.async { implicit request =>
+  val result = for {
+    form <- loginForm.bindFromRequest() |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
+    userId <- userDao.maybeLogin(form)  |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm)))
+  } yield gotoLoginSucceeded(userId)
+  
+  constructResultWithF(result)
 }
 ```
 
-You also get a Component to Render the Store, it will update on changes automatically
+## Helper
+`shared.utils.Implicits // usable as trait or import`
 
-```scala
-Store.contacts.render(
-    error => <.span(error.getMessage),   // Throwable Error
-    pending => <.span(s"pending for $pending ms"),
-    <.div("Store is Ready and Empty"),  // lazy
-    contacts => {
-        <.table(
-            <.tbody(
-                contacts.map { contact =>
-                    <.tr(
-                        <.td(contact.key),
-                        <.td(contact.name)
-                    )
-                }
-            )
-        )
-    }
-)
+Put your usefull implicits in here, already contains an implicit class with extension methods to lift types to option/future, since I like suffixes more then wrapping them.
+
+
 ```
+import shared.utils.Implicits._
+val x: String = "Some String"
+val o: Option[String] = x.asOption
+val f: Future[Option[String]] = o.asFuture
+```
+
+> In my experience, you should not use implicit conversions.
+
+`shared.utils.Codecs`
+
+Contains Encoder/Decoder for uPickle and Circe. You will want to import / extend this when talking to the Api.
+
+## Why Circe AND uPickle?
+uPickle works better for Client/Server communication using autowire (I had problems with Circe and sealed traits).
+
+Circe seems to work better for creating external facing Api's.
