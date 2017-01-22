@@ -49,16 +49,18 @@ lazy val codegen = (project in file("codegen"))
 
 lazy val server = (project in file("server"))
   .settings(
-    commands += CodegenCmd,
+    commands ++= Seq(CodegenCmd, RecreateCmd),
     libraryDependencies ++= Seq(
       jdbc,
       cache,
       ws,
-      "com.typesafe.slick" %% "slick"                % slick,
-      "com.typesafe.play"  %% "play-slick"           % playSlick,
-      "com.vmunier"        %% "play-scalajs-scripts" % playScalajs,
-      "jp.t2v"             %% "play2-auth"           % playAuth,
-      "org.flywaydb"       %% "flyway-play"          % flywayPlay
+      "com.github.t3hnar"    %% "scala-bcrypt"         % bcrypt,
+      "com.typesafe.slick"   %% "slick"                % slick,
+      "com.typesafe.play"    %% "play-slick"           % playSlick,
+      "com.vmunier"          %% "play-scalajs-scripts" % playScalajs,
+      "jp.t2v"               %% "play2-auth"           % playAuth,
+      "org.flywaydb"         %% "flyway-play"          % flywayPlay,
+      "com.github.pathikrit" %% "better-files"         % betterFiles
     ),
     scalaJSProjects          := Seq(web),
     pipelineStages in Assets := Seq(scalaJSPipeline),
@@ -68,17 +70,17 @@ lazy val server = (project in file("server"))
   .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi"   %%% "autowire"        % autowire,
-      "com.lihaoyi"   %%% "scalarx"         % scalarx,
-      "me.chrons"     %%% "diode-data"      % diode,
-      "org.scalaz"    %%% "scalaz-core"     % scalaz,
-      "io.github.soc" %%% "scala-java-time" % scalaJavaTime,
-      "io.circe"      %%% "circe-core"      % circeVersion,
-      "io.circe"      %%% "circe-generic"   % circeVersion,
-      "io.circe"      %%% "circe-parser"    % circeVersion
-    ))
+  .settings(libraryDependencies ++= Seq(
+    "com.lihaoyi"       %%% "autowire"        % autowire,
+    "com.lihaoyi"       %%% "scalarx"         % scalarx,
+    "me.chrons"         %%% "diode-data"      % diode,
+    "org.scalaz"        %%% "scalaz-core"     % scalaz,
+    "io.github.cquiroz" %%% "scala-java-time" % scalaJavaTime,
+    "io.circe"          %%% "circe-core"      % circeVersion,
+    "io.circe"          %%% "circe-generic"   % circeVersion,
+    "io.circe"          %%% "circe-parser"    % circeVersion,
+    "com.lihaoyi"       %%% "upickle"         % upickle
+  ))
   .jsConfigure(_ enablePlugins ScalaJSPlugin)
   .jsSettings()
 
@@ -90,5 +92,10 @@ onLoad in Global := (Command.process("project server", _: State)) compose (onLoa
 
 lazy val CodegenCmd = Command.command("codegen") { state =>
   "codegen/run" ::
+    state
+}
+
+lazy val RecreateCmd = Command.command("codegen-re") { state =>
+  "codegen/run recreate" ::
     state
 }

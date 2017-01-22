@@ -2,7 +2,6 @@ package utils
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.OnUnmount
-import rx.Ctx.Owner
 
 abstract class RxObserver[BS <: BackendScope[_, _]](scope: BS) extends OnUnmount {
 
@@ -18,7 +17,7 @@ abstract class RxObserver[BS <: BackendScope[_, _]](scope: BS) extends OnUnmount
     }
   }
 
-  protected def dependantObserve[T](rx: Rx[T], shouldUpdate: (T, T) => Boolean) = {
+  protected def dependantObserve[T](rx: Rx[T], shouldUpdate: (T, T) => Boolean): Callback = {
     val obs = rx.reduce((a, b) => {
       if (shouldUpdate(a, b)) {
         scope.forceUpdate.runNow

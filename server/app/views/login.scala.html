@@ -1,6 +1,21 @@
-@()(implicit request: Request[_], messages: Messages)
+@(form: Form[_])(implicit request: Request[_], messages: Messages)
 
 @main {
-    <h1>Login please</h1>
-    <a href="@routes.Application.login()">Login</a>
+    <h1>Login</h1>
+
+    @helper.form(routes.Application.login()) {
+        <p>
+            <label for="email">Email (test@@test.de):</label>
+            <br />
+            <input name="email" placeholder="test@@test.de" value="test@@test.de" />
+        </p>
+
+        <p>
+            <label for="password">Password (testpw):</label>
+            <br />
+            <input name="password" type="password" value="testpw" />
+        </p>
+
+        <button>Login</button>
+    }
 }

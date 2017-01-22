@@ -12,7 +12,6 @@ import scala.concurrent.duration.Duration
 import scala.io.Source
 
 object Main extends App {
-
   import scala.collection.JavaConversions._
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -36,9 +35,23 @@ object Main extends App {
 
     val profile = CustomizedPgDriver
     val db = CustomizedPgDriver.api.Database.forURL(url,
-      driver = "org.postgresql.Driver",
-      user = user,
-      password = password)
+                                                    driver = driver,
+                                                    user = user,
+                                                    password = password)
+
+    if (args.contains("recreate")) {
+      println("Removing Database to rerun all migrations")
+      val c         = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
+      val statement = c.createStatement()
+      try {
+        statement.executeUpdate(s"DROP DATABASE ${url.reverse.takeWhile(_ != '/').reverse};")
+      } catch {
+        case scala.util.control.NonFatal(e) =>
+      } finally {
+        statement.close()
+        c.close()
+      }
+    }
 
     println("Creating Database if necessary")
     val c         = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
@@ -70,10 +83,10 @@ object Main extends App {
       sourceGen.map(
         codegen =>
           codegen.writeToFile("bay.driver.CustomizedPgDriver",
-            "dbdriver/src/main/scala",
-            "models.auto_generated.slick",
-            name,
-            s"$name.scala")) recover {
+                              "dbdriver/src/main/scala",
+                              "models.auto_generated.slick",
+                              name,
+                              s"$name.scala")) recover {
         case e: Throwable => e.printStackTrace()
       },
       Duration.Inf

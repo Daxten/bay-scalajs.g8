@@ -1,18 +1,9 @@
 package services
 
-import io.circe.parser._
-import io.circe.syntax._
-import io.circe.{Decoder, Encoder}
+import shared.utils.UpickleCodecs
 
-object AutowireRouter extends autowire.Server[String, Decoder, Encoder] {
-  def write[Result: Encoder](r: Result) = r.asJson.noSpaces
+object AutowireRouter extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] with UpickleCodecs {
+  def write[Result: upickle.default.Writer](r: Result): String = upickle.default.write(r)
 
-  def read[Result: Decoder](p: String) = parse(p) match {
-    case Left(e) => throw e
-    case Right(e) =>
-      e.as[Result] match {
-        case Left(e)  => throw e
-        case Right(e) => e
-      }
-  }
+  def read[Result: upickle.default.Reader](p: String): Result = upickle.default.read[Result](p)
 }

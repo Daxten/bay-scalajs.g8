@@ -1,12 +1,13 @@
 package shared.models
 
-/**
-  * Created by alexe on 15.11.2016.
-  */
-object ApiModel {
-  sealed trait Ordering
-  case object Asc extends Ordering
-  case object Desc extends Ordering
+import scala.concurrent.Future
+import scalaz.\/
 
-  case class SortMethod[T](property: T, order: Ordering)
+object ApiModel {
+  sealed trait ApiError
+  case object NotFound extends ApiError
+
+  case object NoContent
+
+  type ApiResult[T] = Future[\/[ApiError, T]]
 }

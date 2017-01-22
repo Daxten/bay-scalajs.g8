@@ -1,14 +1,21 @@
 package services
 
 import org.threeten.bp.OffsetDateTime
+import shared.models.ApiModel.ApiResult
+import shared.models.SharedDefault._
+import shared.utils.Implicits._
+import shared.utils.LoremIpsum
+import scalaz.Scalaz._
+import scalaz._
 
-import shared.models.SharedDefault.BaseUser
+class ApiService(user: Option[User]) extends Api {
 
-import scala.concurrent.Future
+  override def ping(): ApiResult[String] = "pong".right.asFuture
 
-class ApiService(user: Option[BaseUser]) extends Api {
+  override def now(): ApiResult[OffsetDateTime] = OffsetDateTime.now.right.asFuture
 
-  def ping(): Future[String] = "pong"
-
-  override def now(): Future[OffsetDateTime] = OffsetDateTime.now
+  override def createLoremIpsum(): ApiResult[List[String]] = {
+    Thread.sleep(2000)
+    LoremIpsum.paragraphs(15).right.asFuture
+  }
 }

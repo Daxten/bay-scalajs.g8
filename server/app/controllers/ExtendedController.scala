@@ -2,16 +2,15 @@ package controllers
 
 import play.api.data.Form
 import play.api.mvc.{Controller, Request, Result}
-
+import shared.utils.{Codecs, Implicits}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.implicitConversions
-import scalaz.{-\/, EitherT, \/, \/-}
 import scalaz.Scalaz._
+import scalaz.{-\/, EitherT, \/, \/-}
 
 /**
   * Created by Haak on 24.04.2016.
   */
-trait ExtendedController extends Controller {
+trait ExtendedController extends Controller with Implicits with Codecs {
   implicit val ec: ExecutionContext
 
   // Source: https://github.com/eamelink/flatten/blob/master/play-specific/app/controllers/Part17.scala
@@ -34,14 +33,14 @@ trait ExtendedController extends Controller {
       EitherT[Future, Result, A](foa.map(_ \/> failure))
     def fromFEither[A, B](failure: B => Result)(fva: Future[B \/ A]): HttpResult[A] =
       EitherT[Future, Result, A](fva.map(_.leftMap(failure)))
-    def fromForm[FormType](failure: Form[FormType] => Result)(form: Form[FormType])(implicit request: Request[_]) =
-      EitherT[Future, Result, FormType](form.bindFromRequest.fold(errorForm => -\/(failure(errorForm)), formEntity => \/-(formEntity)))
+    def fromForm[FormType](failure: Form[FormType] => Result)(form: Form[FormType])(
+        implicit request: Request[_]): HttpResult[FormType] =
+      EitherT[Future, Result, FormType](
+        form.bindFromRequest.fold(errorForm => -\/(failure(errorForm)).asFuture,
+                                  formEntity => \/-(formEntity).asFuture))
   }
 
-  // Usefull implicit conversions
-  implicit def toFuture[T](e: T): Future[T] = Future.successful(e)
-  implicit def constructResult(result: HttpResult[Result]): Future[Result] =
-    result.run.map { _.fold(identity, identity) }
-  implicit def constructFromResultFromEither(result: EitherT[Future, Result, Future[Result]]): Future[Result] =
-    result.run.flatMap(_.fold(Future.successful, identity))
+  def constructResult(result: HttpResult[Result]): Future[Result] = result.run.map(_.merge)
+  def constructResultWithF(result: HttpResult[Future[Result]]): Future[Result] =
+    result.run.flatMap(_.leftMap(_.asFuture).merge)
 }

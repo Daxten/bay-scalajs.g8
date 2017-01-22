@@ -1,35 +1,22 @@
 package services
 
 import org.scalajs.dom
-import io.circe.parser._
-import io.circe.syntax._
-import io.circe.{Decoder, Encoder}
-
 import scala.concurrent.Future
 
-object AjaxClient extends autowire.Client[String, Decoder, Encoder] {
-
-  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+object AjaxClient extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
 
   override def doCall(req: Request): Future[String] = {
 
     dom.ext.Ajax
       .post(
         url = "/api/" + req.path.mkString("/"),
-        data = req.args.asJson.noSpaces,
+        data = upickle.default.write(req.args),
         headers = Map("Content-Type" -> "application/json")
       )
       .map(_.responseText)
   }
 
-  def write[Result: Encoder](r: Result) = r.asJson.noSpaces
+  def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 
-  def read[Result: Decoder](p: String) = parse(p) match {
-    case Left(e) => throw e
-    case Right(e) =>
-      e.as[Result] match {
-        case Left(e)  => throw e
-        case Right(e) => e
-      }
-  }
+  def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
 }

@@ -1,8 +1,8 @@
 package components
 
-import app.AppRouter.Loc
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
+import models.Locs.Loc
 import utils.ReactTags
 
 object LayoutComponent extends ReactTags {
@@ -17,10 +17,11 @@ object LayoutComponent extends ReactTags {
 
     def render(props: Props, state: State) = {
       <.div(
-        <.h1("Layout"),
         <.div(
-          <.h2("Render Content:"),
           props.r.render()
+        ),
+        <.div(^.cls := "footer")(
+          <.button(^.onClick --> Callback(org.scalajs.dom.window.location.replace("/logout")))("logout")
         )
       )
     }
