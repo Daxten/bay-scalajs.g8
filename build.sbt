@@ -42,8 +42,10 @@ lazy val dbdriver = (project in file("dbdriver"))
 lazy val codegen = (project in file("codegen"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.flywaydb"       % "flyway-core"    % flyway,
-      "com.typesafe.slick" %% "slick-codegen" % slick
+    "org.flywaydb"       % "flyway-core"    % flyway,
+    "com.typesafe.slick" %% "slick-codegen" % slick,
+    "org.scalameta"      %% "scalameta"     % scalaMeta,
+    "com.geirsson"       %% "scalafmt"      % scalaFmt
     ))
   .dependsOn(dbdriver)
 

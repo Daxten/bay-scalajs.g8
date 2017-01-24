@@ -26,5 +26,7 @@ object Dependencies {
   val circeVersion  = "0.6.1" // https://circe.github.io/circe
 
   // Codegen only
-  val flyway = "4.0.3" // https://flywaydb.org/documentation/api/
+  val flyway    = "4.0.3" // https://flywaydb.org/documentation/api/
+  val scalaMeta = "1.3.0" // https://github.com/scalameta/scalameta
+  val scalaFmt  = "0.5.0" // https://github.com/olafurpg/scalafmt
 }

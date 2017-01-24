@@ -18,6 +18,9 @@ Runs migrations and scaffolds the configured database into
 * case classes inside the shared module
 * slick schemas inside the dbdriver project
 
+meta goodies:
+* you can add methods to the `case class`es that get auto-generated, the codegen will preserve these changes
+
 ``sbt codegen-re``
 
 similar to `sbt-codegen`, but removes the database first. This helps when changing the newest schema while it's not yet in source control / production. 
@@ -76,7 +79,7 @@ Contains Encoder/Decoder for uPickle and Circe. You will want to import / extend
 
 `utils.ReactTags`
 
-Simply extend this trait to get vdom into scope. I've created since the package name is way too long to remember for me.
+Simply extend this trait to get vdom into scope.. the package name is way too long to remember for me.
 
 ## Why Circe AND uPickle?
 uPickle works better for Client/Server communication using autowire (I had problems with Circe and sealed traits).
