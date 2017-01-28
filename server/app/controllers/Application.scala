@@ -61,5 +61,4 @@ class Application @Inject()(val messagesApi: MessagesApi, val userDao: UserDao)(
       Ok(responseData)
     }
   }
-
 }

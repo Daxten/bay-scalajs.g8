@@ -13,7 +13,7 @@ import scala.meta._
 
 object SwaggerCodegen extends App {
   val swaggerDir = file"server/conf/swagger"
-  val swaggers   = swaggerDir.list.filter(_.extension.contains(".swagger")).map(e => (e, new SwaggerParser().read(e.pathAsString)))
+  val swaggers   = swaggerDir.listRecursively.filter(_.extension.contains(".yaml")).map(e => (e, new SwaggerParser().read(e.pathAsString)))
 
   swaggers.foreach(e => createForConfig(e._1, e._2))
 
@@ -24,7 +24,7 @@ object SwaggerCodegen extends App {
     /*
     Create Models
      */
-    val modelsFolder = file"shared/src/main/scala/shared/models/swagger/$apiVersion"
+    val modelsFolder = file"shared/src/main/scala/shared/models/swagger/${f.nameWithoutExtension}/$apiVersion"
     val swaggerTypeMap = Map(
       "string"   -> "String",
       "integer"  -> "Int",
@@ -55,7 +55,7 @@ object SwaggerCodegen extends App {
         if (targetFile.notExists) {
           val template =
             s"""
-            |package shared.models.swagger.$apiVersion
+            |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
             |
             |$modelAsCaseClass
           """.trim.stripMargin
@@ -69,6 +69,109 @@ object SwaggerCodegen extends App {
           targetFile.write(ScalaFmtHelper.formatCode(tree.syntax))
         }
     }
+
+    /*
+      Create Api
+     */
+    val basePath = swagger.getBasePath
+    val target   = file"server/app/controllers/swagger/$apiVersion/${f.nameWithoutExtension.toUpperCamelCase.takeWhile(_ != '_')}.scala"
+
+    case class RouterCase(routerCase: String, abstractfunc: String)
+
+    val routerCases: Vector[RouterCase] = swagger.getPaths.toVector.flatMap {
+      case (strPath, path) =>
+        println(s"- Creating Router for $strPath")
+
+        val playPath = strPath
+          .split('/')
+          .map { e =>
+            if (e.startsWith("{"))
+              "$" + e
+            else e
+          }
+          .mkString("", "/", "")
+
+        path.getOperationMap.toVector.map {
+          case (method, op) =>
+            val methodName =
+              if (op.getOperationId == null) {
+                method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString
+              } else op.getOperationId
+
+            val queryParameter = op.getParameters.toVector
+              .filter(_.getIn.toLowerCase == "query")
+              .map { e =>
+                if (e.getRequired) {
+                  s"""q"${e.getName}=$$${e.getName}""""
+                } else {
+                  s"""q_o"${e.getName}=$$${e.getName}""""
+                }
+              }
+
+            val queryParameterStr =
+              if (queryParameter.isEmpty) ""
+              else {
+                s" ? ${queryParameter.mkString(" ? ")}"
+              }
+
+            val bodyStr = {
+              if (Seq("POST", "PUT").contains(method.toString)) {
+                s"(parse.json)"
+              } else {
+                s""
+              }
+            }
+
+            val routerCase = s"""
+               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack$bodyStr { implicit request =>
+               |  constructResult($methodName(${(op.getParameters.toVector
+                                  .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
+                                  .map(e => s"${e.getName}")
+                                  :+ "loggedIn")
+                                  .mkString(", ")}))
+               |}
+             """.stripMargin
+
+            val params = op.getParameters.toVector
+                .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
+                .map { e =>
+                val tpe = "String"
+                if (e.getRequired) {
+                  s"${e.getName}: $tpe"
+                } else {
+                  s"${e.getName}: Option[$tpe]"
+                }
+              } ++ Seq("loggedIn: Option[User]")
+
+            val abstractFunc = s"""def $methodName(${params.mkString(", ")}): HttpResult[Result] """
+            RouterCase(routerCase.mkString, abstractFunc)
+        }
+    }
+
+    val template =
+      s"""
+         |package controllers.swagger.$apiVersion
+         |
+         |import com.google.inject.Inject
+         |import play.api.mvc._
+         |import play.api.routing._
+         |import play.api.routing.sird._
+         |import scala.concurrent.ExecutionContext
+         |import controllers.{AuthConfigImpl, ExtendedController}
+         |import jp.t2v.lab.play2.auth.OptionalAuthElement
+         |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
+         |
+         |trait ${f.nameWithoutExtension.toUpperCamelCase} extends ExtendedController with OptionalAuthElement with AuthConfigImpl {
+         |  val swaggerRouter: Router = Router.from {
+         |   ${routerCases.map(_.routerCase).mkString}
+         |  }
+         |
+         |  ${routerCases.map(_.abstractfunc).mkString("\n")}
+         |}
+         |
+         """.trim.stripMargin
+
+    target.createIfNotExists(createParents = true).overwrite(ScalaFmtHelper.formatCode(template))
 
   }
 }

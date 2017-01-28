@@ -8,9 +8,7 @@ version in ThisBuild := "0.1-SNAPSHOT"
 scalaVersion in ThisBuild := "2.11.8"
 
 resolvers in ThisBuild ++= Seq(
-  "zalando-bintray" at "https://dl.bintray.com/zalando/maven",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-  "jeffmay" at "https://dl.bintray.com/jeffmay/maven",
   Resolver.url("sbt-plugins", url("http://dl.bintray.com/zalando/sbt-plugins"))(Resolver.ivyStylePatterns)
 )
 
@@ -49,7 +47,7 @@ lazy val codegen = (project in file("codegen"))
     "org.scalameta"        %% "scalameta"     % scalaMeta,
     "com.geirsson"         %% "scalafmt"      % scalaFmt,
     "com.github.pathikrit" %% "better-files"  % betterFiles,
-    "io.swagger"           % "swagger-parser" % "1.0.24"
+    "io.swagger"           % "swagger-parser" % "1.0.25"
   ))
   .dependsOn(dbdriver)
 
@@ -60,27 +58,20 @@ lazy val server = (project in file("server"))
       jdbc,
       cache,
       ws,
-      "com.github.t3hnar"      %% "scala-bcrypt" % bcrypt,
-      "com.typesafe.slick"     %% "slick" % slick,
-      "com.typesafe.play"      %% "play-slick" % playSlick,
-      "com.vmunier"            %% "play-scalajs-scripts" % playScalajs,
-      "jp.t2v"                 %% "play2-auth" % playAuth,
-      "org.flywaydb"           %% "flyway-play" % flywayPlay,
-      "com.github.pathikrit"   %% "better-files" % betterFiles,
-      specs2                   % Test,
-      "org.scalacheck"         %% "scalacheck" % "1.12.4" % Test,
-      "org.specs2"             %% "specs2-scalacheck" % "3.6" % Test,
-      "me.jeffmay"             %% "play-json-tests" % "1.3.0" % Test,
-      "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
+      "com.github.t3hnar"    %% "scala-bcrypt"         % bcrypt,
+      "com.typesafe.slick"   %% "slick"                % slick,
+      "com.typesafe.play"    %% "play-slick"           % playSlick,
+      "com.vmunier"          %% "play-scalajs-scripts" % playScalajs,
+      "jp.t2v"               %% "play2-auth"           % playAuth,
+      "org.flywaydb"         %% "flyway-play"          % flywayPlay,
+      "com.github.pathikrit" %% "better-files"         % betterFiles
     ),
-    scalaJSProjects            := Seq(web),
-    pipelineStages in Assets   := Seq(scalaJSPipeline),
-    routesGenerator            := InjectedRoutesGenerator,
-    apiFirstParsers            := Seq(ApiFirstSwaggerParser.swaggerSpec2Ast.value).flatten,
-    playScalaAutogenerateTests := true
+    scalaJSProjects          := Seq(web),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    routesGenerator          := InjectedRoutesGenerator
   )
   .dependsOn(dbdriver)
-  .enablePlugins(PlayScala, ApiFirstCore, ApiFirstPlayScalaCodeGenerator, ApiFirstSwaggerParser, DockerPlugin, JavaServerAppPackaging)
+  .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(libraryDependencies ++= Seq(
