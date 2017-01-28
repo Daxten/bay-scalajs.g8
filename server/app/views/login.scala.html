@@ -1,0 +1,16 @@
+@(form: Form[_])(implicit request: Request[_], messages: Messages)
+
+@main {
+    <h1>Login</h1>
+
+    @helper.form(routes.Application.login()) {
+        @if(form.hasGlobalErrors) { @* only 1 global error exists atm, you can use messages here for example *@
+            <p>Wrong Password</p>
+        }
+
+        @helper.inputText(form("email"))
+        @helper.inputText(form("password")) @* obviously, change this *@
+
+        <button>Login</button>
+    }
+}

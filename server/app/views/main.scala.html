@@ -1,0 +1,21 @@
+@(content: Html)(implicit request: Request[_], messages: Messages)
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <!-- Meta -->
+    <title>My App</title>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="@routes.Assets.versioned("images/favicon.ico")">
+    <link rel="apple-touch-startup-image" href="@routes.Assets.versioned("images/favicon.ico")">
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.ico")">
+
+    <!-- Styling -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="@routes.Assets.versioned("stylesheets/style.css")">
+  </head>
+  <body>
+    @content
+  </body>
+</html>

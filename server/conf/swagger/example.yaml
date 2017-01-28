@@ -1,0 +1,205 @@
+swagger: '2.0'
+info:
+  version: 1.0
+  title: Swagger Security Example
+  description: |
+    This specification demonstrates usage of protected resources with swagger.
+basePath: /example
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+x-api-first-error-mapping:
+  301:
+    - java.lang.SecurityException
+  401:
+    - java.lang.IllegalArgumentException
+paths:
+  /token:
+    x-api-first-handler: "example.yaml.TokenService.token"
+    post:
+      description: |
+        This API endpoint is used by the example itself to validate the security token,
+        basically representing an Authorization server.
+        Normally, this service will be operated by different company and deployed in different environment,
+        but for the demo purposes we placed it in the same specification.
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+      - name: token
+        in: formData
+        description: oauth2 token
+        type: string
+        format: byte
+        pattern: "[A-Za-z0-9]*"
+        minLength: 5
+        maxLength: 100
+        required: true
+      responses:
+        200:
+          description: |
+            Normal response, a User in the case if valid token was provided .
+            The `User` needs to be inlined here. If it would be defined in the `definitions` area,
+            the scopes field would be an `ArrayWrapper` (for parsing purposes)
+          schema:
+            type: object
+            required:
+              - username
+              - scopes
+            properties:
+              username:
+                type: string
+                minLength: 3
+                maxLength: 200
+              scopes:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+        401:
+          description: |
+            In the case if no valid token was provided
+          # schema must be provided here, otherwise the returning type will be Null
+          schema:
+            type: string
+        default:
+          description: error payload
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    get:
+      description: |
+        This endpoint is used by Swagger UI to get a token and store it into the UI session.
+        Normally, it would include some authentication procedure, but for the purpose of the example
+        this API ussues the same token for any combination of parameters and responds with a local redirect url
+        which is then used by the frontend to parse the token.
+      parameters:
+      - name: redirect_uri
+        in: query
+        description: the redirection URL
+        type: string
+        minLength: 1
+        maxLength: 1110
+        required: false
+        default: http://localhost:9000/example/token
+      - name: scope
+        in: query
+        description: requested scope
+        type: string
+        minLength: 1
+        maxLength: 110
+        required: false
+        default: "admin:org"
+      - name: response_type
+        in: query
+        type: string
+        pattern: "token"
+        required: false
+        default: "token"
+      - name: state
+        in: query
+        description: Any application state to be forwarded back to the frontend
+        type: string
+        minLength: 1
+        maxLength: 110
+        required: false
+      responses:
+        301:
+          description: |
+            A redirect from the login form
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 100
+        401:
+          description: |
+            In the case if no valid combination of username and password was provided
+            # schema is not provided here, the returning type will be Null
+        default:
+          description: error payload
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  /todos/{user_id}:
+    get:
+      parameters:
+      - name: user_id
+        in: path
+        description: ID of the user
+        required: true
+        type: integer
+        minimum: 0
+        exclusiveMinimum: true
+      - name: count
+        in: query
+        type: integer
+      description: Returns user's todo
+      operationId: getUserTodos
+      security:
+        - internalOAuth:
+          - user
+          - admin:org
+          - admin:public_key
+      produces:
+        - application/json+todos
+      responses:
+        200:
+          description: Normal response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Todo'
+        default:
+          description: No payload
+securityDefinitions:
+  internalOAuth:
+    type: oauth2
+    scopes:
+      user: Grants read/write access to profile info only. Note that this scope includes user:email and user:follow.
+      admin:org: Fully manage organization, teams, and memberships.
+      admin:public_key: Fully manage public keys.
+    flow: implicit
+    # we use a single API here to issue token (for SwaggerUI)
+    authorizationUrl: http://localhost:9000/example/token
+    # and to validate it later
+    x-token-validation-url: http://localhost:9000/example/token
+definitions:
+  Todo:
+    required:
+      - name
+    properties:
+      name:
+        type: string
+      tag:
+        type: string
+      description:
+        type: string
+  ErrorModel:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+#  User:
+#    required:
+#      - name
+#      - scopes
+#    properties:
+#      name:
+#        type: string
+#        minLength: 3
+#        maxLength: 200
+#      scopes:
+#        type: array
+#        items:
+#          type: string
+#          minLength: 1
+#          maxLength: 40
