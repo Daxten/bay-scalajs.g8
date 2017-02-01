@@ -1,7 +1,7 @@
 package services
 
 import java.time.OffsetDateTime
-import shared.models.AutoApiModel.ApiResult
+import shared.models.WiredApiModel.ApiResult
 import shared.utils.Implicits._
 import shared.utils.LoremIpsum
 import shared.models.slick.default._

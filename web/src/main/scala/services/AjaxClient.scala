@@ -9,7 +9,7 @@ object AjaxClient extends autowire.Client[String, upickle.default.Reader, upickl
 
     dom.ext.Ajax
       .post(
-        url = "/api/" + req.path.mkString("/"),
+        url = "/wired/" + req.path.mkString("/"),
         data = upickle.default.write(req.args),
         headers = Map("Content-Type" -> "application/json")
       )

@@ -3,9 +3,11 @@ package app
 import io.swagger.parser.SwaggerParser
 import io.swagger.models.Swagger
 import utils.Implicits._
+
 import scala.collection.JavaConversions._
 import better.files._
 import java.io.{File => JFile}
+import java.time.OffsetDateTime
 
 import utils.{CaseClassMetaHelper, ScalaFmtHelper}
 
@@ -25,27 +27,28 @@ object SwaggerCodegen extends App {
     Create Models
      */
     val modelsFolder = file"shared/src/main/scala/shared/models/swagger/${f.nameWithoutExtension}/$apiVersion"
-    val swaggerTypeMap = Map(
-      "string"   -> "String",
-      "integer"  -> "Int",
-      "number"   -> "Double",
-      "float"    -> "Double",
-      "double"   -> "Double",
-      "boolean"  -> "Boolean",
-      "date"     -> "LocalDate",
-      "time"     -> "LocalTime",
-      "dateTime" -> "OffsetDateTime"
-    )
 
     swagger.getDefinitions.toVector.foreach {
       case (name, model) =>
         val modelName = name.toUpperCamelCase
 
         val propertiesAsScala: Vector[String] = model.getProperties.toVector.map { e =>
+          val scalaType = (e._2.getType, Option(e._2.getFormat)) match {
+            case ("integer", Some("int64"))    => "Long"
+            case ("integer", _)                => "Int"
+            case ("number", _)                 => "Double"
+            case ("string", None)              => "String"
+            case ("string", Some("byte"))      => "String"
+            case ("string", Some("binary"))    => "String"
+            case ("boolean", _)                => "Boolean"
+            case ("string", Some("date"))      => "LocalDate"
+            case ("string", Some("date-time")) => "OffsetDateTime"
+          }
+
           if (e._2.getRequired) {
-            s"${e._1.toCamelCase}: ${swaggerTypeMap(e._2.getType)}"
+            s"${e._1.toCamelCase}: $scalaType"
           } else {
-            s"${e._1.toCamelCase}: Option[${swaggerTypeMap(e._2.getType)}]"
+            s"${e._1.toCamelCase}: Option[$scalaType]"
           }
         }
 
@@ -56,6 +59,8 @@ object SwaggerCodegen extends App {
           val template =
             s"""
             |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
+            |
+            |import java.time._
             |
             |$modelAsCaseClass
           """.trim.stripMargin
@@ -161,8 +166,8 @@ object SwaggerCodegen extends App {
          |import jp.t2v.lab.play2.auth.OptionalAuthElement
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
-         |trait ${f.nameWithoutExtension.toUpperCamelCase} extends ExtendedController with OptionalAuthElement with AuthConfigImpl {
-         |  val swaggerRouter: Router = Router.from {
+         |trait ${f.nameWithoutExtension.toUpperCamelCase} extends ExtendedController with OptionalAuthElement with AuthConfigImpl with SimpleRouter {
+         |  def routes: Router.Routes = {
          |   ${routerCases.map(_.routerCase).mkString}
          |  }
          |
@@ -171,7 +176,25 @@ object SwaggerCodegen extends App {
          |
          """.trim.stripMargin
 
-    target.createIfNotExists(createParents = true).overwrite(ScalaFmtHelper.formatCode(template))
+    if (target.notExists) {
+      target.createIfNotExists(createParents = true).overwrite(ScalaFmtHelper.formatCode(template))
+    } else {
+      val templTrait = template
+        .parse[Source]
+        .get
+        .collect {
+          case c @ q"..$mods trait $tname[..$tparams] extends $template" =>
+            c
+        }
+        .head
+
+      val source = target.toJava.parse[Source].get.transform {
+        case q"trait $tname extends $template { ..$body }" if tname.value == f.nameWithoutExtension.toUpperCamelCase =>
+          templTrait
+      }
+
+      target.overwrite(ScalaFmtHelper.formatCode(source.syntax))
+    }
 
   }
 }

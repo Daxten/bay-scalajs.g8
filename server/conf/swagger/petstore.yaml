@@ -26,9 +26,6 @@ paths:
       operationId: findPets
       produces:
         - application/json
-        - application/xml
-        - text/xml
-        - text/html
       parameters:
         - name: tags
           in: query
@@ -124,12 +121,16 @@ definitions:
     required:
       - id
       - name
+      - created
     properties:
       id:
         type: integer
         format: int64
       name:
         type: string
+      created:
+        type: string
+        format: date-time
       tag:
         type: string
   newPet:

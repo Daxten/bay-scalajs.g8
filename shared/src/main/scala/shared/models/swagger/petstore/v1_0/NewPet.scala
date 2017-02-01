@@ -1,2 +1,3 @@
 package shared.models.swagger.petstore.v1_0
-case class NewPet(id: Option[Int], name: String, tag: Option[String])
+import java.time._
+case class NewPet(id: Option[Long], name: String, tag: Option[String])

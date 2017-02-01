@@ -4,7 +4,8 @@
 
 # Home page
 GET         /                    controllers.Application.index(path = "")
-POST        /api/*path           controllers.Application.api(path)
+->          /api                 controllers.swagger.v1_0.PetstoreRouter
+POST        /wired/*path         controllers.Application.api(path)
 
 GET         /login               controllers.Application.index(path = "")
 POST        /login               controllers.Application.login
