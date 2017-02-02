@@ -23,7 +23,7 @@ object Dependencies {
   val diode         = "1.0.0" // https://github.com/ochrons/diode
   val scalaz        = "7.2.8" // https://github.com/scalaz/scalaz
   val scalaJavaTime = "2.0.0-M7" // https://github.com/cquiroz/scala-java-time
-  val circeVersion  = "0.6.1" // https://circe.github.io/circe
+  val circeVersion  = "0.7.0" // https://circe.github.io/circe
 
   // Codegen only
   val flyway    = "4.0.3" // https://flywaydb.org/documentation/api/

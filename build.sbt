@@ -9,6 +9,7 @@ scalaVersion in ThisBuild := "2.11.8"
 
 resolvers in ThisBuild ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
+  "Bintary JCenter" at "http://jcenter.bintray.com",
   Resolver.url("sbt-plugins", url("http://dl.bintray.com/zalando/sbt-plugins"))(Resolver.ivyStylePatterns)
 )
 
@@ -64,7 +65,8 @@ lazy val server = (project in file("server"))
       "com.vmunier"          %% "play-scalajs-scripts" % playScalajs,
       "jp.t2v"               %% "play2-auth"           % playAuth,
       "org.flywaydb"         %% "flyway-play"          % flywayPlay,
-      "com.github.pathikrit" %% "better-files"         % betterFiles
+      "com.github.pathikrit" %% "better-files"         % betterFiles,
+      "play-circe"           %% "play-circe"           % "2.5-0.7.0"
     ),
     scalaJSProjects          := Seq(web),
     pipelineStages in Assets := Seq(scalaJSPipeline),

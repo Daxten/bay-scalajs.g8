@@ -98,10 +98,7 @@ object SwaggerCodegen extends App {
 
         path.getOperationMap.toVector.map {
           case (method, op) =>
-            val methodName =
-              if (op.getOperationId == null) {
-                method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString
-              } else op.getOperationId
+            val methodName = Option(op.getOperationId).getOrElse(method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString)
 
             val queryParameter = op.getParameters.toVector
               .filter(_.getIn.toLowerCase == "query")
@@ -119,13 +116,13 @@ object SwaggerCodegen extends App {
                 s" ? ${queryParameter.mkString(" ? ")}"
               }
 
-            val multiPartBodyStr = "(parse.multipartFormData)"    // atm only support either json or multipart/form-data
+            // atm only support either json or multipart/form-data
             val bodyStr = {
               if (Seq("POST", "PUT").contains(method.toString)) {
                 if (Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase).contains("multipart/form-data")) {
-                  multiPartBodyStr
+                  "(parse.multipartFormData)"
                 } else {
-                  "(parse.json)"
+                  "(circe.json)"
                 }
               } else {
                 s""
@@ -152,9 +149,12 @@ object SwaggerCodegen extends App {
                 }
               }
 
-            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${if (bodyStr == multiPartBodyStr)
-              "MultipartFormData[Files.TemporaryFile]"
-            else "AnyContent"}]): HttpResult[Result] """
+            val bodyType = Map(
+              "(parse.multipartFormData)" -> "MultipartFormData[Files.TemporaryFile]",
+              "(parse.json)" -> "Json"
+            )
+
+            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${bodyType.getOrElse(bodyStr, "AnyContent")}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -163,15 +163,19 @@ object SwaggerCodegen extends App {
       s"""
          |package controllers.swagger.$apiVersion
          |
-         |import com.google.inject.Inject
          |import play.api.mvc._
+         |import com.google.inject.Inject
          |import play.api.routing._
          |import play.api.routing.sird._
+         |import play.api.libs.circe._
          |import scala.concurrent.ExecutionContext
          |import controllers.{AuthConfigImpl, ExtendedController}
          |import jp.t2v.lab.play2.stackc.RequestWithAttributes
          |import jp.t2v.lab.play2.auth.OptionalAuthElement
          |import services.dao.UserDao
+         |import io.circe.Json
+         |import io.circe.generic.auto._
+         |import io.circe.syntax._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
          |class ${f.nameWithoutExtension.toUpperCamelCase} @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends ${f.nameWithoutExtension.toUpperCamelCase}Trait {
@@ -180,7 +184,7 @@ object SwaggerCodegen extends App {
          |
          |}
          |
-         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with OptionalAuthElement with AuthConfigImpl {
+         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with OptionalAuthElement with AuthConfigImpl with Circe {
          |  def routes: Router.Routes = {
          |   ${routerCases.map(_.routerCase).mkString}
          |  }
