@@ -1,60 +1,53 @@
 package controllers.swagger.v1_0
 
-import java.time.OffsetDateTime
-
 import com.google.inject.Inject
 import play.api.mvc._
 import play.api.routing._
 import play.api.routing.sird._
-import io.circe.generic.auto._
-import io.circe.syntax._
-
 import scala.concurrent.ExecutionContext
 import controllers.{AuthConfigImpl, ExtendedController}
+import jp.t2v.lab.play2.stackc.RequestWithAttributes
 import jp.t2v.lab.play2.auth.OptionalAuthElement
 import services.dao.UserDao
-import java.time._
-import shared.models.slick.default.User
 import shared.models.swagger.petstore.v1_0._
 
-class PetstoreRouter @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends Petstore {
-  override def findPets(tags: Option[String], limit: Option[String], loggedIn: Option[User]): HttpResult[Result] =
-    Ok(Seq(Pet(1, "Aika", OffsetDateTime.now, None)).asJson.spaces2).pureResult
+class Petstore @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends PetstoreTrait {
 
-  override def addPet(loggedIn: Option[User]): HttpResult[Result] = Ok.pureResult
+  def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] =
+    NotImplemented.pureResult
+  def addPet()(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                = NotImplemented.pureResult
+  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] = NotImplemented.pureResult
+  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]   = NotImplemented.pureResult
 
-  override def findPetById(id: String, loggedIn: Option[User]): HttpResult[Result] = Ok.pureResult
-
-  override def deletePet(id: String, loggedIn: Option[User]): HttpResult[Result] = Ok.pureResult
 }
 
-trait Petstore extends ExtendedController with OptionalAuthElement with AuthConfigImpl with SimpleRouter {
+trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAuthElement with AuthConfigImpl {
   def routes: Router.Routes = {
 
     case GET(p"/pets" ? q_o"tags=$tags" ? q_o"limit=$limit") =>
       AsyncStack { implicit request =>
-        constructResult(findPets(tags, limit, loggedIn))
+        constructResult(findPets(tags, limit))
       }
 
     case POST(p"/pets") =>
       AsyncStack(parse.json) { implicit request =>
-        constructResult(addPet(loggedIn))
+        constructResult(addPet())
       }
 
     case GET(p"/pets/${id}") =>
       AsyncStack { implicit request =>
-        constructResult(findPetById(id, loggedIn))
+        constructResult(findPetById(id))
       }
 
     case DELETE(p"/pets/${id}") =>
       AsyncStack { implicit request =>
-        constructResult(deletePet(id, loggedIn))
+        constructResult(deletePet(id))
       }
 
   }
 
-  def findPets(tags: Option[String], limit: Option[String], loggedIn: Option[User]): HttpResult[Result]
-  def addPet(loggedIn: Option[User]): HttpResult[Result]
-  def findPetById(id: String, loggedIn: Option[User]): HttpResult[Result]
-  def deletePet(id: String, loggedIn: Option[User]): HttpResult[Result]
+  def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
+  def addPet()(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
+  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
+  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
 }

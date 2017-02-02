@@ -119,9 +119,14 @@ object SwaggerCodegen extends App {
                 s" ? ${queryParameter.mkString(" ? ")}"
               }
 
+            val multiPartBodyStr = "(parse.multipartFormData)"    // atm only support either json or multipart/form-data
             val bodyStr = {
               if (Seq("POST", "PUT").contains(method.toString)) {
-                s"(parse.json)"
+                if (Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase).contains("multipart/form-data")) {
+                  multiPartBodyStr
+                } else {
+                  "(parse.json)"
+                }
               } else {
                 s""
               }
@@ -129,26 +134,27 @@ object SwaggerCodegen extends App {
 
             val routerCase = s"""
                |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack$bodyStr { implicit request =>
-               |  constructResult($methodName(${(op.getParameters.toVector
+               |  constructResult($methodName(${op.getParameters.toVector
                                   .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
                                   .map(e => s"${e.getName}")
-                                  :+ "loggedIn")
                                   .mkString(", ")}))
                |}
              """.stripMargin
 
             val params = op.getParameters.toVector
-                .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
-                .map { e =>
+              .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
+              .map { e =>
                 val tpe = "String"
                 if (e.getRequired) {
                   s"${e.getName}: $tpe"
                 } else {
                   s"${e.getName}: Option[$tpe]"
                 }
-              } ++ Seq("loggedIn: Option[User]")
+              }
 
-            val abstractFunc = s"""def $methodName(${params.mkString(", ")}): HttpResult[Result] """
+            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${if (bodyStr == multiPartBodyStr)
+              "MultipartFormData[Files.TemporaryFile]"
+            else "AnyContent"}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -163,10 +169,18 @@ object SwaggerCodegen extends App {
          |import play.api.routing.sird._
          |import scala.concurrent.ExecutionContext
          |import controllers.{AuthConfigImpl, ExtendedController}
+         |import jp.t2v.lab.play2.stackc.RequestWithAttributes
          |import jp.t2v.lab.play2.auth.OptionalAuthElement
+         |import services.dao.UserDao
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
-         |trait ${f.nameWithoutExtension.toUpperCamelCase} extends ExtendedController with OptionalAuthElement with AuthConfigImpl with SimpleRouter {
+         |class ${f.nameWithoutExtension.toUpperCamelCase} @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends ${f.nameWithoutExtension.toUpperCamelCase}Trait {
+         |
+         |  ${routerCases.map(_.abstractfunc + " = NotImplemented.pureResult").mkString("\n")}
+         |
+         |}
+         |
+         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with OptionalAuthElement with AuthConfigImpl {
          |  def routes: Router.Routes = {
          |   ${routerCases.map(_.routerCase).mkString}
          |  }
@@ -189,7 +203,7 @@ object SwaggerCodegen extends App {
         .head
 
       val source = target.toJava.parse[Source].get.transform {
-        case q"trait $tname extends $template { ..$body }" if tname.value == f.nameWithoutExtension.toUpperCamelCase =>
+        case q"trait $tname extends $template { ..$body }" if tname.value == f.nameWithoutExtension.toUpperCamelCase + "Trait" =>
           templTrait
       }
 
