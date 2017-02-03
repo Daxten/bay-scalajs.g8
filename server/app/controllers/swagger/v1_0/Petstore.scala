@@ -19,7 +19,7 @@ class Petstore @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext
 
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] =
     NotImplemented.pureResult
-  def addPet()(implicit request: RequestWithAttributes[Json]): HttpResult[Result]                      = NotImplemented.pureResult
+  def addPet()(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                = NotImplemented.pureResult
   def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] = NotImplemented.pureResult
   def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]   = NotImplemented.pureResult
 
@@ -51,7 +51,7 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
   }
 
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
-  def addPet()(implicit request: RequestWithAttributes[Json]): HttpResult[Result]
+  def addPet()(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
   def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
   def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
 }
