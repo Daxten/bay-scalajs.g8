@@ -64,6 +64,12 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/newPet'
+        - name: mediafile
+          in: body
+          schema:
+            type: file
+      consumes:
+        - multipart/form-data
       responses:
         '200':
           description: pet response
@@ -132,6 +138,8 @@ definitions:
         type: string
         format: date-time
       tag:
+        type: string
+      media:
         type: string
   newPet:
     type: object

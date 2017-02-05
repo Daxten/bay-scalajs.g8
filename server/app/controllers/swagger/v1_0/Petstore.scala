@@ -5,6 +5,7 @@ import com.google.inject.Inject
 import play.api.routing._
 import play.api.routing.sird._
 import play.api.libs.circe._
+
 import scala.concurrent.ExecutionContext
 import controllers.{AuthConfigImpl, ExtendedController}
 import jp.t2v.lab.play2.stackc.RequestWithAttributes
@@ -13,15 +14,16 @@ import services.dao.UserDao
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
+import play.api.libs.Files
 import shared.models.swagger.petstore.v1_0._
 
 class Petstore @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends PetstoreTrait {
 
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] =
     NotImplemented.pureResult
-  def addPet()(implicit request: RequestWithAttributes[Json]): HttpResult[Result]                      = NotImplemented.pureResult
-  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] = NotImplemented.pureResult
-  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]   = NotImplemented.pureResult
+  def addPet()(implicit request: RequestWithAttributes[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result] = NotImplemented.pureResult
+  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]              = NotImplemented.pureResult
+  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                = NotImplemented.pureResult
 
 }
 
@@ -34,7 +36,7 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
       }
 
     case POST(p"/pets") =>
-      AsyncStack(circe.json) { implicit request =>
+      AsyncStack(parse.multipartFormData) { implicit request =>
         constructResult(addPet())
       }
 
@@ -51,7 +53,7 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
   }
 
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
-  def addPet()(implicit request: RequestWithAttributes[Json]): HttpResult[Result]
+  def addPet()(implicit request: RequestWithAttributes[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result]
   def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
   def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
 }

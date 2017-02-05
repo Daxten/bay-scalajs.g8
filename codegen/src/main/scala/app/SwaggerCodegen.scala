@@ -98,7 +98,8 @@ object SwaggerCodegen extends App {
 
         path.getOperationMap.toVector.map {
           case (method, op) =>
-            val methodName = Option(op.getOperationId).getOrElse(method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString)
+            val methodName = Option(op.getOperationId)
+              .getOrElse(method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString)
 
             val queryParameter = op.getParameters.toVector
               .filter(_.getIn.toLowerCase == "query")
@@ -151,10 +152,12 @@ object SwaggerCodegen extends App {
 
             val bodyType = Map(
               "(parse.multipartFormData)" -> "MultipartFormData[Files.TemporaryFile]",
-              "(parse.json)" -> "Json"
+              "(parse.json)"              -> "Json"
             )
 
-            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${bodyType.getOrElse(bodyStr, "AnyContent")}]): HttpResult[Result] """
+            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${bodyType.getOrElse(
+              bodyStr,
+              "AnyContent")}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -174,6 +177,7 @@ object SwaggerCodegen extends App {
          |import jp.t2v.lab.play2.auth.OptionalAuthElement
          |import services.dao.UserDao
          |import io.circe.Json
+         |import play.api.libs.Files
          |import io.circe.generic.auto._
          |import io.circe.syntax._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
