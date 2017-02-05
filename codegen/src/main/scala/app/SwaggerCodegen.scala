@@ -12,16 +12,21 @@ import java.time.OffsetDateTime
 import utils.{CaseClassMetaHelper, ScalaFmtHelper}
 
 import scala.meta._
+import scala.util.Try
 
 object SwaggerCodegen extends App {
   val swaggerDir = file"server/conf/swagger"
   val swaggers   = swaggerDir.listRecursively.filter(_.extension.contains(".yaml")).map(e => (e, new SwaggerParser().read(e.pathAsString)))
 
+  implicit class ExtParamater(e: io.swagger.models.parameters.Parameter) {
+    def getType: Option[String] = Try(e.asInstanceOf[io.swagger.models.parameters.PathParameter].getType).toOption
+  }
+
   swaggers.foreach(e => createForConfig(e._1, e._2))
 
   def createForConfig(f: File, swagger: Swagger): Unit = {
     val apiVersion = "v" + swagger.getInfo.getVersion.replace(".", "_")
-    println(s"Codegeneration for Swaggerdoc at [${f.pathAsString}] $apiVersion")
+    println(s"# Codegeneration for Swaggerdoc at [${f.pathAsString}] $apiVersion")
 
     /*
     Create Models
@@ -43,6 +48,7 @@ object SwaggerCodegen extends App {
             case ("boolean", _)                => "Boolean"
             case ("string", Some("date"))      => "LocalDate"
             case ("string", Some("date-time")) => "OffsetDateTime"
+            case _                             => "String"
           }
 
           if (e._2.getRequired) {
@@ -90,9 +96,25 @@ object SwaggerCodegen extends App {
         val playPath = strPath
           .split('/')
           .map { e =>
-            if (e.startsWith("{"))
-              "$" + e
-            else e
+            if (e.startsWith("{")) {
+              val name = e.drop(1).dropRight(1)
+              if (path.getOperations.flatMap(e => Option(e.getParameters)).flatten
+                    .filter(e => {
+                      println(name)
+                      println(e.getName)
+                      e.getName == name
+                    })
+                    .find(e => {
+                      println(e.getIn)
+                      Option(e.getIn).map(_.toLowerCase).contains("path")
+                    })
+                    .flatMap({ e => println(e.getName); e.getType })
+                    .contains("integer")) {
+                s"$$int($e)"
+              } else {
+                "$" + e
+              }
+            } else e
           }
           .mkString("", "/", "")
 
@@ -217,6 +239,5 @@ object SwaggerCodegen extends App {
 
       target.overwrite(ScalaFmtHelper.formatCode(source.syntax))
     }
-
   }
 }

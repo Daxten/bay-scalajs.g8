@@ -5,16 +5,15 @@ import com.google.inject.Inject
 import play.api.routing._
 import play.api.routing.sird._
 import play.api.libs.circe._
-
 import scala.concurrent.ExecutionContext
 import controllers.{AuthConfigImpl, ExtendedController}
 import jp.t2v.lab.play2.stackc.RequestWithAttributes
 import jp.t2v.lab.play2.auth.OptionalAuthElement
 import services.dao.UserDao
 import io.circe.Json
+import play.api.libs.Files
 import io.circe.generic.auto._
 import io.circe.syntax._
-import play.api.libs.Files
 import shared.models.swagger.petstore.v1_0._
 
 class Petstore @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends PetstoreTrait {
@@ -40,12 +39,12 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
         constructResult(addPet())
       }
 
-    case GET(p"/pets/${id}") =>
+    case GET(p"/pets/$int({id})") =>
       AsyncStack { implicit request =>
         constructResult(findPetById(id))
       }
 
-    case DELETE(p"/pets/${id}") =>
+    case DELETE(p"/pets/$int({id})") =>
       AsyncStack { implicit request =>
         constructResult(deletePet(id))
       }
