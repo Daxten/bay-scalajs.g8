@@ -98,19 +98,16 @@ object SwaggerCodegen extends App {
           .map { e =>
             if (e.startsWith("{")) {
               val name = e.drop(1).dropRight(1)
-              if (path.getOperations.flatMap(e => Option(e.getParameters)).flatten
-                    .filter(e => {
-                      println(name)
-                      println(e.getName)
-                      e.getName == name
-                    })
+              if (path.getOperations
+                    .flatMap(e => Option(e.getParameters))
+                    .flatten
+                    .filter(_.getName == name)
                     .find(e => {
-                      println(e.getIn)
                       Option(e.getIn).map(_.toLowerCase).contains("path")
                     })
-                    .flatMap({ e => println(e.getName); e.getType })
+                    .flatMap(_.getType)
                     .contains("integer")) {
-                s"$$int($e)"
+                s"$${int($name)}"
               } else {
                 "$" + e
               }
@@ -164,7 +161,8 @@ object SwaggerCodegen extends App {
             val params = op.getParameters.toVector
               .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
               .map { e =>
-                val tpe = "String"
+                val tpe = if (e.getType.contains("integer")) "Int" else "String"
+
                 if (e.getRequired) {
                   s"${e.getName}: $tpe"
                 } else {

@@ -21,8 +21,8 @@ class Petstore @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result] =
     NotImplemented.pureResult
   def addPet()(implicit request: RequestWithAttributes[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result] = NotImplemented.pureResult
-  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]              = NotImplemented.pureResult
-  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                = NotImplemented.pureResult
+  def findPetById(id: Int)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                 = NotImplemented.pureResult
+  def deletePet(id: Int)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]                   = NotImplemented.pureResult
 
 }
 
@@ -39,12 +39,12 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
         constructResult(addPet())
       }
 
-    case GET(p"/pets/$int({id})") =>
+    case GET(p"/pets/${int(id)}") =>
       AsyncStack { implicit request =>
         constructResult(findPetById(id))
       }
 
-    case DELETE(p"/pets/$int({id})") =>
+    case DELETE(p"/pets/${int(id)}") =>
       AsyncStack { implicit request =>
         constructResult(deletePet(id))
       }
@@ -53,6 +53,6 @@ trait PetstoreTrait extends ExtendedController with SimpleRouter with OptionalAu
 
   def findPets(tags: Option[String], limit: Option[String])(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
   def addPet()(implicit request: RequestWithAttributes[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result]
-  def findPetById(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
-  def deletePet(id: String)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
+  def findPetById(id: Int)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
+  def deletePet(id: Int)(implicit request: RequestWithAttributes[AnyContent]): HttpResult[Result]
 }
