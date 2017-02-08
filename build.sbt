@@ -9,8 +9,7 @@ scalaVersion in ThisBuild := "2.11.8"
 
 resolvers in ThisBuild ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-  "Bintary JCenter" at "http://jcenter.bintray.com",
-  Resolver.url("sbt-plugins", url("http://dl.bintray.com/zalando/sbt-plugins"))(Resolver.ivyStylePatterns)
+  "Bintary JCenter" at "http://jcenter.bintray.com"
 )
 
 lazy val web = (project in file("web"))

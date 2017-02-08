@@ -62,6 +62,7 @@ object SwaggerCodegen extends App {
 
         val targetFile = modelsFolder./(s"$modelName.scala")
         if (targetFile.notExists) {
+          // Create Template
           val template =
             s"""
             |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
@@ -73,6 +74,7 @@ object SwaggerCodegen extends App {
 
           targetFile.createIfNotExists(createParents = true).overwrite(template)
         } else {
+          // Update existing Source
           val source = targetFile.toJava.parse[Source].get
           val caseClassStat =
             modelAsCaseClass.parse[Stat].get
