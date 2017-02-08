@@ -5,11 +5,11 @@ import shared.models.WiredApiModel.ApiResult
 import shared.utils.Implicits._
 import shared.utils.LoremIpsum
 import shared.models.slick.default._
-import shared.services.AutoApi
+import shared.services.WiredApi
 import scalaz.Scalaz._
 import scalaz._
 
-class AutoApiService(user: Option[User]) extends AutoApi {
+class WiredApiService(user: Option[User]) extends WiredApi {
 
   override def ping(): ApiResult[String] = "pong".right.asFuture
 

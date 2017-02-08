@@ -6,7 +6,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import models.Locs.Loc
 import services.AjaxClient
-import shared.services.AutoApi
+import shared.services.WiredApi
 import shared.utils.{Codecs, LoremIpsum}
 import utils.ReactTags
 
@@ -21,7 +21,7 @@ object HomeScreen extends ReactTags with Codecs {
   class Backend($ : BackendScope[Props, State]) {
 
     def mounted() = Callback {
-      AjaxClient[AutoApi].now().call().foreach {
+      AjaxClient[WiredApi].now().call().foreach {
         case \/-(time) => println(time.toString)
         case -\/(e)    => org.scalajs.dom.window.alert(e.toString)
       }

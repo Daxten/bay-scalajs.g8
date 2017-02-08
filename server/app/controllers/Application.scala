@@ -10,7 +10,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc._
 import services._
 import services.dao.UserDao
-import shared.services.AutoApi
+import shared.services.WiredApi
 import upickle.default._
 
 import scala.concurrent.ExecutionContext
@@ -54,7 +54,7 @@ class Application @Inject()(val messagesApi: MessagesApi, val userDao: UserDao)(
 
   def api(s: String): Action[JsValue] = AsyncStack(parse.json) { implicit request =>
     val path = s.split("/")
-    AutowireRouter.route[AutoApi](new AutoApiService(loggedIn)) {
+    AutowireRouter.route[WiredApi](new WiredApiService(loggedIn)) {
       val json = read[Map[String, String]](request.body.toString())
       autowire.Core.Request(path, json)
     } map { responseData =>
