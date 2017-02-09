@@ -41,11 +41,12 @@ class Application @Inject()(val messagesApi: MessagesApi, val userDao: UserDao)(
 
   def login: Action[AnyContent] = Action.async { implicit request =>
     val result = for {
-      form <- loginForm.bindFromRequest() |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
-      userId <- userDao.maybeLogin(form)  |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm.fill(form).withGlobalError("bad.password"))))
-    } yield gotoLoginSucceeded(userId)
+      form <- loginForm.bindFromRequest()  |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
+      userId <- userDao.maybeLogin(form)   |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm.fill(form).withGlobalError("bad.password"))))
+      status <- gotoLoginSucceeded(userId) |> HttpResult.fromFuture
+    } yield status
 
-    constructResultWithF(result)
+    constructResult(result)
   }
 
   def logout: Action[AnyContent] = Action.async { implicit request =>

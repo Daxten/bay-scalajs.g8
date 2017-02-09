@@ -38,8 +38,6 @@ trait ExtendedController extends Controller with Implicits with Codecs {
   }
 
   def constructResult(result: HttpResult[Result]): Future[Result] = result.run.map(_.merge)
-  def constructResultWithF(result: HttpResult[Future[Result]]): Future[Result] =
-    result.run.flatMap(_.leftMap(_.asFuture).merge)
 
   implicit class ExtResult(e: Result) {
     def pureResult: HttpResult[Result] = EitherT[Future, Result, Result](Future.successful(\/-(e)))
