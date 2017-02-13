@@ -196,7 +196,7 @@ object SwaggerCodegen extends App {
               }
 
             val abstractFunc =
-              s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
+              s"""override def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -250,7 +250,7 @@ object SwaggerCodegen extends App {
         .head
 
       val source = target.toJava.parse[Source].get.transform {
-        case q"trait $tname extends $template { ..$body }" if tname.value == f.nameWithoutExtension.toUpperCamelCase + "Trait" =>
+        case q"trait $tname extends $template" if tname.value == f.nameWithoutExtension.toUpperCamelCase + "Trait" =>
           templTrait
       }
 
