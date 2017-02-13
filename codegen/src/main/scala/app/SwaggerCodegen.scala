@@ -138,21 +138,44 @@ object SwaggerCodegen extends App {
                 s" ? ${queryParameter.mkString(" ? ")}"
               }
 
+            sealed trait RequestBodyType
+            object NoBody extends RequestBodyType
+            object JsonBody extends RequestBodyType
+            object MultipartBody extends RequestBodyType
+            object FileBody extends RequestBodyType
+
+            val body2parser = Map[RequestBodyType, String](
+              NoBody        -> "",
+              JsonBody      -> "(circe.json)",
+              MultipartBody -> "(parse.multipartFormData)",
+              FileBody      -> "(parse.temporaryFile)"
+            ).withDefault(_ => "")
+
+            val body2content = Map[RequestBodyType, String](
+              NoBody        -> "AnyContent",
+              JsonBody      -> "Json",
+              MultipartBody -> "MultipartFormData[Files.TemporaryFile]",
+              FileBody      -> "Files.TemporaryFile"
+            ).withDefault(_ => "AnyContent")
+
             // atm only support either json or multipart/form-data
-            val bodyStr = {
+            val bodyType: RequestBodyType = {
               if (Seq("POST", "PUT").contains(method.toString)) {
-                if (Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase).contains("multipart/form-data")) {
-                  "(parse.multipartFormData)"
-                } else {
-                  "(circe.json)"
+                Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase) match {
+                  case Some("multipart/form-data") =>
+                    MultipartBody
+                  case Some("application/json") =>
+                    JsonBody
+                  case _ =>
+                    FileBody
                 }
               } else {
-                s""
+                NoBody
               }
             }
 
             val routerCase = s"""
-               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack$bodyStr { implicit request =>
+               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
                |  constructResult($methodName(${op.getParameters.toVector
                                   .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
                                   .map(e => s"${e.getName}")
@@ -172,14 +195,8 @@ object SwaggerCodegen extends App {
                 }
               }
 
-            val bodyType = Map(
-              "(parse.multipartFormData)" -> "MultipartFormData[Files.TemporaryFile]",
-              "(parse.json)"              -> "Json"
-            )
-
-            val abstractFunc = s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${bodyType.getOrElse(
-              bodyStr,
-              "AnyContent")}]): HttpResult[Result] """
+            val abstractFunc =
+              s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }

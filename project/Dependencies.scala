@@ -27,6 +27,6 @@ object Dependencies {
 
   // Codegen only
   val flyway    = "4.0.3" // https://flywaydb.org/documentation/api/
-  val scalaMeta = "1.3.0" // https://github.com/scalameta/scalameta
+  val scalaMeta = "1.4.0" // https://github.com/scalameta/scalameta
   val scalaFmt  = "0.5.0" // https://github.com/olafurpg/scalafmt
 }
