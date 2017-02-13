@@ -9,7 +9,8 @@ scalaVersion in ThisBuild := "2.11.8"
 
 resolvers in ThisBuild ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-  "Bintary JCenter" at "http://jcenter.bintray.com"
+  "Bintary JCenter" at "http://jcenter.bintray.com",
+  Resolver.bintrayIvyRepo("scalameta", "maven")
 )
 
 lazy val web = (project in file("web"))
@@ -45,7 +46,7 @@ lazy val codegen = (project in file("codegen"))
     "org.flywaydb"         % "flyway-core"    % flyway,
     "com.typesafe.slick"   %% "slick-codegen" % slick,
     "org.scalameta"        %% "scalameta"     % scalaMeta,
-    "com.geirsson"         %% "scalafmt"      % scalaFmt,
+    "com.geirsson"         %% "scalafmt-core" % scalaFmt,
     "com.github.pathikrit" %% "better-files"  % betterFiles,
     "io.swagger"           % "swagger-parser" % "1.0.25"
   ))
