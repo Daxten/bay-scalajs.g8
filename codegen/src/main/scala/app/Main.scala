@@ -69,7 +69,7 @@ object Main extends App {
     val flyway = new Flyway
     flyway.setDataSource(url, user, password)
     flyway.setValidateOnMigrate(false) // Creates problems with windows machines
-    flyway.setLocations(s"filesystem:server/conf/db/migrations/$short")
+    flyway.setLocations(s"filesystem:server/conf/db/migration/$short")
     flyway.migrate()
 
     println("Starting codegen..")
