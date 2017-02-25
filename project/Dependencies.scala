@@ -1,13 +1,15 @@
 object Dependencies {
   // Server (jvm)
-  val slickPg     = "0.15.0-M3" // https://github.com/tminglei/slick-pg
-  val slick       = "3.2.0-M2" // http://slick.lightbend.com/
-  val playSlick   = "2.1.0-M1" // https://github.com/playframework/play-slick
-  val playScalajs = "0.3.0" // https://github.com/vmunier/scalajs-scripts
-  val playAuth    = "0.14.2" // https://github.com/t2v/play2-auth
-  val flywayPlay  = "3.0.1" // https://github.com/flyway/flyway-play
-  val bcrypt      = "3.0" // https://github.com/t3hnar/scala-bcrypt
-  val betterFiles = "2.17.1" // https://github.com/pathikrit/better-files
+  val slickPg       = "0.15.0-M4" // https://github.com/tminglei/slick-pg
+  val slick         = "3.2.0" // http://slick.lightbend.com/
+  val playSlick     = "2.1.0-M1" // https://github.com/playframework/play-slick
+  val playScalajs   = "1.0.0" // https://github.com/vmunier/scalajs-scripts
+  val playAuth      = "0.14.2" // https://github.com/t2v/play2-auth
+  val playCirce     = "2.5-0.7.0" // https://github.com/jilen/play-circe
+  val flywayPlay    = "3.0.1" // https://github.com/flyway/flyway-play
+  val bcrypt        = "3.0" // https://github.com/t3hnar/scala-bcrypt
+  val betterFiles   = "2.17.1" // https://github.com/pathikrit/better-files
+  val swaggerParser = "1.0.25" // https://github.com/swagger-api/swagger-parser
 
   // ScalaJs
   val scalajsReact = "0.11.3" // https://github.com/japgolly/scalajs-react/blob/master/doc/USAGE.md
@@ -27,6 +29,6 @@ object Dependencies {
 
   // Codegen only
   val flyway    = "4.0.3" // https://flywaydb.org/documentation/api/
-  val scalaMeta = "1.6.0-671" // https://github.com/scalameta/scalameta
+  val scalaMeta = "1.6.0-690" // https://github.com/scalameta/scalameta
   val scalaFmt  = "0.5.6" // https://github.com/olafurpg/scalafmt
 }

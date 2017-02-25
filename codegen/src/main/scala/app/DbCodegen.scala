@@ -7,7 +7,8 @@ import bay.driver.CustomizedPgDriver
 import better.files._
 import com.typesafe.config.ConfigFactory
 import org.flywaydb.core.Flyway
-import utils.{CaseClassMetaHelper, ScalaFmtHelper}
+import utils.CaseClassMetaHelper
+import utils.ScalaFmtHelper
 import utils.Implicits._
 
 import scala.concurrent.Await
@@ -46,7 +47,7 @@ object DbCodegen extends App {
       try {
         statement.executeUpdate(s"DROP DATABASE ${url.reverse.takeWhile(_ != '/').reverse};")
       } catch {
-        case scala.util.control.NonFatal(e) =>
+        case scala.util.control.NonFatal(e) => ()
       } finally {
         statement.close()
         c.close()
@@ -69,24 +70,27 @@ object DbCodegen extends App {
     val flyway = new Flyway
     flyway.setDataSource(url, user, password)
     flyway.setValidateOnMigrate(false) // Creates problems with windows machines
-    flyway.setLocations(s"filesystem:server/conf/db/migrations/$short")
+    flyway.setLocations(s"filesystem:server/conf/db/migration/$short")
     flyway.migrate()
 
     println("- Starting codegeneration task..")
     def sourceGen =
-      db.run(profile.createModel(Option(profile.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))))) map { model =>
+      db.run(profile.createModel(Option(profile.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))))).map { model =>
         new CustomizedCodeGenerator(model)
       }
 
     Await.ready(
-      sourceGen.map(codegen => codegen.writeToFile("bay.driver.CustomizedPgDriver", "dbdriver/src/main/scala", "models.slick", name, s"$name.scala")) recover {
-        case e: Throwable => e.printStackTrace()
-      },
+      sourceGen
+        .map(codegen =>
+          codegen.writeToFile("bay.driver.CustomizedPgDriver", "dbschema/src/main/scala", "models.slick", name, s"$name.scala"))
+        .recover {
+          case e: Throwable => e.printStackTrace()
+        },
       Duration.Inf
     )
 
     println("- Parsing generated slick-model")
-    val createdFile       = file"dbdriver/src/main/scala/models/slick/$name.scala"
+    val createdFile       = file"dbschema/src/main/scala/models/slick/$name.scala"
     val modelSource       = createdFile.contentAsString
     val sharedCaseClasses = modelSource.split("\n").map(_.trim).filter(_.startsWith("case class"))
     val filteredSource    = modelSource.split("\n").filterNot(_.trim.startsWith("case class")).mkString("\n")
@@ -105,21 +109,21 @@ object DbCodegen extends App {
       val targetFile = path./(s"$modelName.scala")
 
       if (targetFile.notExists) {
-        println(s"-- Creating ${name.toCamelCase} Model")
+        println(s"-- Creating ${targetFile.path.toString}")
 
         val template =
           s"""
-               |package shared.models.slick.${name.toCamelCase}
-               |
+             |package shared.models.slick.${name.toCamelCase}
+             |
                |import shared.utils.Codecs._
-               |import java.time._
-               |
+             |import java.time._
+             |
                |$caseClass
           """.trim.stripMargin
 
         targetFile.createIfNotExists(createParents = true).overwrite(template)
       } else {
-        println(s"-- Updating ${name.toCamelCase} Model")
+        println(s"-- Loading ${targetFile.path.toString}")
 
         val source = targetFile.toJava.parse[Source].get
         val tree   = CaseClassMetaHelper.updateOrInsert(source, caseClassStat)

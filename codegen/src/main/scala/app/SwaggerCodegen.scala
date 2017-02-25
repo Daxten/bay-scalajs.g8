@@ -9,7 +9,11 @@ import better.files._
 import java.io.{File => JFile}
 import java.time.OffsetDateTime
 
-import utils.{CaseClassMetaHelper, ScalaFmtHelper}
+import io.swagger.models.properties.ArrayProperty
+import io.swagger.models.properties.Property
+import io.swagger.models.properties.RefProperty
+import utils.CaseClassMetaHelper
+import utils.ScalaFmtHelper
 
 import scala.meta._
 import scala.util.Try
@@ -20,6 +24,27 @@ object SwaggerCodegen extends App {
 
   implicit class ExtParamater(e: io.swagger.models.parameters.Parameter) {
     def getType: Option[String] = Try(e.asInstanceOf[io.swagger.models.parameters.PathParameter].getType).toOption
+  }
+
+  def property2Scala(p: Property, nested: Boolean = false): String = {
+    val tpe = (p.getType, Option(p.getFormat)) match {
+      case _ if p.isInstanceOf[RefProperty] =>
+        p.asInstanceOf[RefProperty].getSimpleRef
+      case ("integer", Some("int64"))    => "Long"
+      case ("integer", _)                => "Int"
+      case ("number", _)                 => "Double"
+      case ("string", None)              => "String"
+      case ("string", Some("byte"))      => "String"
+      case ("string", Some("binary"))    => "String"
+      case ("boolean", _)                => "Boolean"
+      case ("string", Some("date"))      => "LocalDate"
+      case ("string", Some("date-time")) => "OffsetDateTime"
+      case ("array", _)                  => s"List[${property2Scala(p.asInstanceOf[ArrayProperty].getItems, nested = true)}]"
+      case _                             => "String"
+    }
+
+    if (p.getRequired || nested) tpe
+    else s"Option[$tpe]"
   }
 
   swaggers.foreach(e => createForConfig(e._1, e._2))
@@ -38,24 +63,7 @@ object SwaggerCodegen extends App {
         val modelName = name.toUpperCamelCase
 
         val propertiesAsScala: Vector[String] = model.getProperties.toVector.map { e =>
-          val scalaType = (e._2.getType, Option(e._2.getFormat)) match {
-            case ("integer", Some("int64"))    => "Long"
-            case ("integer", _)                => "Int"
-            case ("number", _)                 => "Double"
-            case ("string", None)              => "String"
-            case ("string", Some("byte"))      => "String"
-            case ("string", Some("binary"))    => "String"
-            case ("boolean", _)                => "Boolean"
-            case ("string", Some("date"))      => "LocalDate"
-            case ("string", Some("date-time")) => "OffsetDateTime"
-            case _                             => "String"
-          }
-
-          if (e._2.getRequired) {
-            s"${e._1.toCamelCase}: $scalaType"
-          } else {
-            s"${e._1.toCamelCase}: Option[$scalaType]"
-          }
+          s"${e._1.toCamelCase}: ${property2Scala(e._2)}"
         }
 
         val modelAsCaseClass = s"case class $modelName(${propertiesAsScala.mkString(", ")})"
@@ -65,10 +73,10 @@ object SwaggerCodegen extends App {
           // Create Template
           val template =
             s"""
-            |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
-            |
+               |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
+               |
             |import java.time._
-            |
+               |
             |$modelAsCaseClass
           """.trim.stripMargin
 
@@ -101,14 +109,14 @@ object SwaggerCodegen extends App {
             if (e.startsWith("{")) {
               val name = e.drop(1).dropRight(1)
               if (path.getOperations
-                    .flatMap(e => Option(e.getParameters))
-                    .flatten
-                    .filter(_.getName == name)
-                    .find(e => {
-                      Option(e.getIn).map(_.toLowerCase).contains("path")
-                    })
-                    .flatMap(_.getType)
-                    .contains("integer")) {
+                .flatMap(e => Option(e.getParameters))
+                .flatten
+                .filter(_.getName == name)
+                .find(e => {
+                  Option(e.getIn).map(_.toLowerCase).contains("path")
+                })
+                .flatMap(_.getType)
+                .contains("integer")) {
                 s"$${int($name)}"
               } else {
                 "$" + e
@@ -175,12 +183,12 @@ object SwaggerCodegen extends App {
             }
 
             val routerCase = s"""
-               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
-               |  constructResult($methodName(${op.getParameters.toVector
-                                  .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
-                                  .map(e => s"${e.getName}")
-                                  .mkString(", ")}))
-               |}
+                                |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
+                                |  constructResult($methodName(${op.getParameters.toVector
+              .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
+              .map(e => s"${e.getName}")
+              .mkString(", ")}))
+                                |}
              """.stripMargin
 
             val params = op.getParameters.toVector
@@ -196,7 +204,7 @@ object SwaggerCodegen extends App {
               }
 
             val abstractFunc =
-              s"""override def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
+              s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -223,7 +231,7 @@ object SwaggerCodegen extends App {
          |
          |class ${f.nameWithoutExtension.toUpperCamelCase} @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends ${f.nameWithoutExtension.toUpperCamelCase}Trait {
          |
-         |  ${routerCases.map(_.abstractfunc + " = NotImplemented.pureResult").mkString("\n")}
+         |  ${routerCases.map("override " + _.abstractfunc + " = NotImplemented.pureResult").mkString("\n")}
          |
          |}
          |

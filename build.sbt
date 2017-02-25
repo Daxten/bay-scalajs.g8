@@ -1,5 +1,6 @@
 import sbt.Project.projectToRef
 import Dependencies._
+import com.typesafe.sbt.packager.docker.ExecCmd
 
 name in ThisBuild := """swagger-dev"""
 
@@ -34,12 +35,19 @@ lazy val web = (project in file("web"))
 lazy val dbdriver = (project in file("dbdriver"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.typesafe.slick"  %% "slick"               % slick,
       "com.github.tminglei" %% "slick-pg"            % slickPg,
       "com.github.tminglei" %% "slick-pg_circe-json" % slickPg
     )
   )
   .dependsOn(sharedJVM)
+
+lazy val dbschema = (project in file("dbschema"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick" % slick
+    )
+  )
+  .dependsOn(sharedJVM, dbdriver)
 
 lazy val codegen = (project in file("codegen"))
   .settings(libraryDependencies ++= Seq(
@@ -48,7 +56,7 @@ lazy val codegen = (project in file("codegen"))
     "org.scalameta"        %% "scalameta"     % scalaMeta,
     "com.geirsson"         %% "scalafmt-core" % scalaFmt,
     "com.github.pathikrit" %% "better-files"  % betterFiles,
-    "io.swagger"           % "swagger-parser" % "1.0.25"
+    "io.swagger"           % "swagger-parser" % swaggerParser
   ))
   .dependsOn(dbdriver)
 
@@ -56,24 +64,42 @@ lazy val server = (project in file("server"))
   .settings(
     commands ++= Seq(CodegenCmd, RecreateCmd, SwaggerCmd),
     libraryDependencies ++= Seq(
+      filters,
       jdbc,
       cache,
       ws,
-      "com.github.t3hnar"    %% "scala-bcrypt"         % bcrypt,
-      "com.typesafe.slick"   %% "slick"                % slick,
-      "com.typesafe.play"    %% "play-slick"           % playSlick,
-      "com.vmunier"          %% "play-scalajs-scripts" % playScalajs,
-      "jp.t2v"               %% "play2-auth"           % playAuth,
-      "org.flywaydb"         %% "flyway-play"          % flywayPlay,
-      "com.github.pathikrit" %% "better-files"         % betterFiles,
-      "play-circe"           %% "play-circe"           % "2.5-0.7.0"
+      "com.github.t3hnar"    %% "scala-bcrypt"    % bcrypt,
+      "com.typesafe.slick"   %% "slick"           % slick,
+      "com.typesafe.play"    %% "play-slick"      % playSlick,
+      "com.vmunier"          %% "scalajs-scripts" % playScalajs,
+      "jp.t2v"               %% "play2-auth"      % playAuth,
+      "org.flywaydb"         %% "flyway-play"     % flywayPlay,
+      "com.github.pathikrit" %% "better-files"    % betterFiles,
+      "play-circe"           %% "play-circe"      % playCirce
     ),
     scalaJSProjects          := Seq(web),
-    pipelineStages in Assets := Seq(scalaJSPipeline),
-    routesGenerator          := InjectedRoutesGenerator
+    pipelineStages in Assets := Seq(scalaJSPipeline, digest, gzip),
+    routesGenerator          := InjectedRoutesGenerator,
+    // Build Config which works well for docker deployments
+    javaOptions in Universal ++= Seq(
+      s"-Dpidfile.path=/dev/null",
+      s"-Dlogger.file=/opt/docker/conf/prod-logger.xml",
+      s"-Dconfig.file=/opt/docker/conf/prod.conf"
+    ),
+    dockerExposedPorts  := Seq(9000),
+    version in Docker   := System.getProperty("publish.version", "stage"),
+    dockerUpdateLatest  := true,
+    aggregate in Docker := false, // dont publish container for every module
+    // dockerBaseImage := "anapsix/alpine-java:8" https://github.com/anapsix/docker-alpine-java/issues/28
+    packageName in Docker := (name in ThisBuild).value,
+    // dockerRepository      := Some("my-repository"),
+    dockerExposedVolumes := Seq("/opt/docker/logs"),
+    dockerCommands ++= Seq(
+      ExecCmd("RUN", "chmod", "u+x", s"${(defaultLinuxInstallLocation in Docker).value}/bin/${executableScriptName.value}")
+    )
   )
-  .dependsOn(dbdriver)
-  .enablePlugins(PlayScala, DockerPlugin, JavaServerAppPackaging)
+  .dependsOn(dbdriver, dbschema)
+  .enablePlugins(PlayScala, SbtWeb, DockerPlugin, JavaServerAppPackaging)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(libraryDependencies ++= Seq(

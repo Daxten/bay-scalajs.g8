@@ -39,7 +39,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
                 .map(v => s"${c.name}: ${c.exposedType} = $v")
                 .getOrElse(
                   s"${c.name}: ${c.exposedType}"
-              ))
+                ))
           .mkString(", ")
 
         val prns = parents.map(" with " + _).mkString("")
@@ -67,7 +67,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
             case "_varchar"       => "List[String]"
             case "geometry"       => "com.vividsolutions.jts.geom.Geometry"
             case "int8[]"         => "List[Long]"
-            case "interval"       => "org.threeten.bp.Duration"
+            case "interval"       => "Duration"
             case e                => "String"
           } getOrElse "String"
         case _ => super.rawType.asInstanceOf[String]

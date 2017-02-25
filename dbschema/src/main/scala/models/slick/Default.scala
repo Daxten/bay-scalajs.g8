@@ -18,7 +18,7 @@ trait Default {
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
   import slick.jdbc.{GetResult => GR}
-  
+
                
   /** GetResult implicit for fetching UserGroup objects using plain SQL queries */
   implicit def GetResultUserGroup(implicit e0: GR[String]): GR[UserGroup] = GR{
@@ -37,7 +37,7 @@ trait Default {
   /** Collection-like TableQuery object for table userGroups */
   lazy val userGroups = new TableQuery(tag => new UserGroupTable(tag))
 
-  
+
                
   /** GetResult implicit for fetching User objects using plain SQL queries */
   implicit def GetResultUser(implicit e0: GR[String], e1: GR[OffsetDateTime], e2: GR[Option[OffsetDateTime]], e3: GR[Option[String]], e4: GR[Option[Int]]): GR[User] = GR{
@@ -73,7 +73,7 @@ trait Default {
   /** Collection-like TableQuery object for table users */
   lazy val users = new TableQuery(tag => new UserTable(tag))
 
-  
+
                
   /** GetResult implicit for fetching UserToUserGroup objects using plain SQL queries */
   implicit def GetResultUserToUserGroup(implicit e0: GR[Int], e1: GR[String]): GR[UserToUserGroup] = GR{

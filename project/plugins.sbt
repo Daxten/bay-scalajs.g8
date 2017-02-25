@@ -11,3 +11,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.1.4")
 addSbtPlugin("com.jamesward" % "play-auto-refresh" % "0.0.15")
 
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.8")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.1")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")

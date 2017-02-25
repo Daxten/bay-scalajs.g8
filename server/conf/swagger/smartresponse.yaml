@@ -1,0 +1,188 @@
+---
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.0"
+  title: "Smart Response App"
+  contact: {}
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "api."
+tags:
+- name: "Userworld"
+- name: "Authentication"
+schemes:
+- "https"
+paths:
+  /auth:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Request Auth Token"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/AuthRequest"
+      responses:
+        200:
+          description: "Status 200"
+          schema:
+            $ref: "#/definitions/AuthKey"
+        400:
+          description: "Sehr unerfräulicher Fall! Bei korrekter Installation nicht\
+            \ möglich. Gut loggen und Admin bescheid geben"
+  /request:
+    put:
+      tags:
+      - "Userworld"
+      summary: "Create new SupportRequest"
+      consumes:
+      - "application/json"
+      parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/CreateResponseRequest"
+      responses:
+        200:
+          description: "Returns the Ticket String"
+          schema:
+            type: "string"
+  /request/opencallback:
+    get:
+      tags:
+      - "Userworld"
+      summary: "Get My Requests"
+      parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Ticket Id or Empty"
+          schema:
+            type: "string"
+        401:
+          description: "Status 401"
+  /request/{ticketId}:
+    put:
+      tags:
+      - "Userworld"
+      summary: "Add Media"
+      consumes:
+      - "multipart/form-data"
+      parameters:
+      - name: "ticketId"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "media"
+        in: "formData"
+        required: true
+        type: "file"
+      responses:
+        204:
+          description: "Status 204"
+        401:
+          description: "Status 401"
+  /user:
+    get:
+      tags:
+      - "Userworld"
+      summary: "Get My Information"
+      description: "returns the information for the current user"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Status 200"
+          schema:
+            $ref: "#/definitions/UserData"
+        401:
+          description: "Status 401"
+    post:
+      tags:
+      - "Userworld"
+      summary: "Change my Information"
+      consumes:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/UserData"
+      responses:
+        204:
+          description: "Status 204"
+        400:
+          description: "Server geupdated, Client nicht z.B., Übertragungsfehler??\
+            \ Bug durch Emojis oder ähnlichem?\n\nRohdaten logen, info an  Recordbay\
+            \ / Admin"
+        401:
+          description: "Status 401"
+definitions:
+  CreateResponseRequest:
+    type: "object"
+    required:
+    - "problemcategory"
+    - "telephone"
+    properties:
+      timeslot:
+        type: "number"
+        format: "double"
+        description: "seconds until call"
+      telephone:
+        type: "string"
+      problemcategory:
+        type: "string"
+  UserData:
+    type: "object"
+    required:
+    - "email"
+    properties:
+      telephone:
+        type: "string"
+      firstname:
+        type: "string"
+      lastname:
+        type: "string"
+      email:
+        type: "string"
+  AuthRequest:
+    type: "object"
+    required:
+    - "password"
+    - "userkey"
+    properties:
+      userkey:
+        type: "string"
+      password:
+        type: "string"
+  AuthKey:
+    type: "object"
+    properties:
+      key:
+        type: "string"
