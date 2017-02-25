@@ -12,10 +12,16 @@ host: "localhost:9000"
 basePath: "/api/v1"
 schemes:
 - https
+tags:
+  - "auth"
+  - "user"
+  - "ticket"
 paths:
   /auth:
     post:
       summary: "Request Auth Token"
+      tags:
+      - auth
       consumes:
       - "application/json"
       produces:
@@ -37,6 +43,8 @@ paths:
   /last_ticket:
     get:
       summary: "Get My Requests"
+      tags:
+      - ticket
       parameters:
       - name: "authkey"
         in: "query"
@@ -54,6 +62,8 @@ paths:
   /tickets:
     post:
       summary: "Create new SupportRequest"
+      tags:
+      - ticket
       consumes:
       - "application/json"
       produces:
@@ -76,6 +86,8 @@ paths:
   /tickets/{ticketId}:
     put:
       summary: "Updates a Ticket"
+      tags:
+      - ticket
       consumes:
       - "application/json"
       parameters:
@@ -100,6 +112,8 @@ paths:
   /tickets/{ticketId}/media:
     post:
       summary: "Add Media"
+      tags:
+      - ticket
       consumes:
       - "multipart/form-data"
       parameters:
@@ -123,6 +137,8 @@ paths:
   /me:
     get:
       summary: "Get My Information"
+      tags:
+      - user
       description: "returns the information for the current user"
       produces:
       - "application/json"
@@ -140,6 +156,8 @@ paths:
           description: "Status 401"
     put:
       summary: "Change my Information"
+      tags:
+      - user
       consumes:
       - "application/json"
       parameters:
