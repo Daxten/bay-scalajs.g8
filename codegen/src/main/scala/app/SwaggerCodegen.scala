@@ -46,7 +46,7 @@ object SwaggerCodegen extends App {
   swaggers.foreach(e => createForConfig(e._1, e._2))
 
   def createForConfig(f: File, swagger: Swagger): Unit = {
-    val apiVersion = "v" + swagger.getInfo.getVersion.replace(".", "_")
+    val apiVersion = "v" + swagger.getInfo.getVersion.takeWhile(_ != '.').mkString // Semantic versioning, major / minor updates should force a new class
     println(s"# Codegeneration for Swaggerdoc at [${f.pathAsString}] $apiVersion")
 
     /*
@@ -130,7 +130,7 @@ object SwaggerCodegen extends App {
             ).withDefault(_ => "AnyContent")
 
             // atm only support either json or multipart/form-data
-            val bodyType: RequestBodyType = {
+            val consumeType: RequestBodyType = {
               if (Seq("POST", "PUT").contains(method.toString)) {
                 Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase) match {
                   case Some("multipart/form-data") =>
@@ -145,12 +145,17 @@ object SwaggerCodegen extends App {
               }
             }
 
+            val resultType = op.getResponses.find(_._1 == "200") match {
+              case None => "Result"
+              case Some(responseOp) => property2Scala(responseOp._2.getSchema, nested = true)
+            }
+
             val routerCase = s"""
-               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
+               |case ${method.toString}(p"$playPath"$queryParameterStr) => Action.async${body2parser(consumeType)} { implicit request =>
                |  constructResult($methodName(${op.getParameters.toVector
                                   .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
                                   .map(e => s"${e.getName}")
-                                  .mkString(", ")}))
+                                  .mkString(", ")})${if (resultType == "Result") "" else ".map(e => Ok(e.asJson))"})
                |}
              """.stripMargin
 
@@ -166,8 +171,9 @@ object SwaggerCodegen extends App {
                 }
               }
 
+            // Functions to implement
             val abstractFunc =
-              s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(bodyType)}]): HttpResult[Result] """
+              s"""def $methodName(${params.mkString(", ")})(implicit request: RequestWithAttributes[${body2content(consumeType)}]): HttpResult[$resultType]"""
             RouterCase(routerCase.mkString, abstractFunc)
         }
     }
@@ -192,7 +198,7 @@ object SwaggerCodegen extends App {
          |import io.circe.syntax._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
-         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with Circe {
+         |trait ${f.nameWithoutExtension.toUpperCamelCase} extends ExtendedController with SimpleRouter with Circe {
          |  def routes: Router.Routes = {
          |   ${routerCases.map(_.routerCase).mkString}
          |  }

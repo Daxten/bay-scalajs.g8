@@ -8,17 +8,13 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "api."
-tags:
-- name: "Userworld"
-- name: "Authentication"
+host: "localhost:9000"
+basePath: "/api/v1"
 schemes:
-- "https"
+- https
 paths:
   /auth:
     post:
-      tags:
-      - "Authentication"
       summary: "Request Auth Token"
       consumes:
       - "application/json"
@@ -27,7 +23,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        required: false
+        required: true
         schema:
           $ref: "#/definitions/AuthRequest"
       responses:
@@ -38,32 +34,8 @@ paths:
         400:
           description: "Sehr unerfräulicher Fall! Bei korrekter Installation nicht\
             \ möglich. Gut loggen und Admin bescheid geben"
-  /request:
-    put:
-      tags:
-      - "Userworld"
-      summary: "Create new SupportRequest"
-      consumes:
-      - "application/json"
-      parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
-      - in: "body"
-        name: "body"
-        required: false
-        schema:
-          $ref: "#/definitions/CreateResponseRequest"
-      responses:
-        200:
-          description: "Returns the Ticket String"
-          schema:
-            type: "string"
-  /request/opencallback:
+  /last_ticket:
     get:
-      tags:
-      - "Userworld"
       summary: "Get My Requests"
       parameters:
       - name: "authkey"
@@ -74,13 +46,59 @@ paths:
         200:
           description: "Ticket Id or Empty"
           schema:
-            type: "string"
+            $ref: "#/definitions/ApiTicket"
+        204:
+          description: "No Last Ticket exists"
         401:
           description: "Status 401"
-  /request/{ticketId}:
+  /tickets:
+    post:
+      summary: "Create new SupportRequest"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/ApiTicketInfo"
+      responses:
+        200:
+          description: "Returns the saved Ticket"
+          schema:
+            $ref: "#/definitions/ApiTicket"
+  /tickets/{ticketId}:
     put:
-      tags:
-      - "Userworld"
+      summary: "Updates a Ticket"
+      consumes:
+      - "application/json"
+      parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "ticketId"
+        in: "path"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/ApiTicketInfo"
+      responses:
+        204:
+          description: "Status 204"
+        401:
+          description: "Status 401"
+  /tickets/{ticketId}/media:
+    post:
       summary: "Add Media"
       consumes:
       - "multipart/form-data"
@@ -102,10 +120,8 @@ paths:
           description: "Status 204"
         401:
           description: "Status 401"
-  /user:
+  /me:
     get:
-      tags:
-      - "Userworld"
       summary: "Get My Information"
       description: "returns the information for the current user"
       produces:
@@ -122,16 +138,18 @@ paths:
             $ref: "#/definitions/UserData"
         401:
           description: "Status 401"
-    post:
-      tags:
-      - "Userworld"
+    put:
       summary: "Change my Information"
       consumes:
       - "application/json"
       parameters:
+      - name: "authkey"
+        in: "query"
+        required: true
+        type: "string"
       - in: "body"
         name: "body"
-        required: false
+        required: true
         schema:
           $ref: "#/definitions/UserData"
       responses:
@@ -144,27 +162,52 @@ paths:
         401:
           description: "Status 401"
 definitions:
-  CreateResponseRequest:
+  ApiTicketInfo:
     type: "object"
     required:
-    - "problemcategory"
-    - "telephone"
+    - "closed"
     properties:
       timeslot:
-        type: "number"
-        format: "double"
-        description: "seconds until call"
+        type: "string"
+        format: "date-time"
+        description: "time for callback"
       telephone:
         type: "string"
-      problemcategory:
+      closed:
+        type: "boolean"
+        default: false
+  ApiTicket:
+    type: "object"
+    required:
+    - "closed"
+    - "key"
+    - "media"
+    properties:
+      timeslot:
         type: "string"
+        format: "date-time"
+        description: "time for callback"
+      telephone:
+        type: "string"
+      closed:
+        type: "boolean"
+        default: false
+      key:
+        type: "string"
+      media:
+        type: "array"
+        items:
+          type: "string"
   UserData:
     type: "object"
     required:
     - "email"
+    - "telephone"
     properties:
       telephone:
-        type: "string"
+        type: "array"
+        items:
+          $ref: "#/definitions/TelephoneNumber"
       firstname:
         type: "string"
       lastname:
@@ -183,6 +226,18 @@ definitions:
         type: "string"
   AuthKey:
     type: "object"
+    required:
+    - "key"
     properties:
       key:
         type: "string"
+  TelephoneNumber:
+    type: "object"
+    required:
+      - "number"
+      - "assistant"
+    properties:
+      number:
+        type: "string"
+      assistant:
+        type: "boolean"

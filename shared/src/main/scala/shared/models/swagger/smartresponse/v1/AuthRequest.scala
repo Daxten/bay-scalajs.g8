@@ -1,3 +1,3 @@
-package shared.models.swagger.smartresponse.v1_0_0
+package shared.models.swagger.smartresponse.v1
 import java.time._
 case class AuthRequest(userkey: String, password: String)
