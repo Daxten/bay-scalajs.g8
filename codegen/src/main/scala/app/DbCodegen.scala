@@ -9,7 +9,6 @@ import com.typesafe.config.ConfigFactory
 import org.flywaydb.core.Flyway
 import utils.CaseClassMetaHelper
 import utils.ScalaFmtHelper
-import utils.Implicits._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -113,11 +112,11 @@ object DbCodegen extends App {
 
         val template =
           s"""
-             |package shared.models.slick.${name.toCamelCase}
-             |
+               |package shared.models.slick.${name.toCamelCase}
+               |
                |import shared.utils.Codecs._
-             |import java.time._
-             |
+               |import java.time._
+               |
                |$caseClass
           """.trim.stripMargin
 

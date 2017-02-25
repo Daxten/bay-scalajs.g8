@@ -3,7 +3,6 @@ package app
 import slick.codegen.SourceCodeGenerator
 import slick.sql.SqlProfile.ColumnOption
 import slick.{model => m}
-import utils.Implicits
 
 class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(model) {
   override val ddlEnabled = false
@@ -39,7 +38,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
                 .map(v => s"${c.name}: ${c.exposedType} = $v")
                 .getOrElse(
                   s"${c.name}: ${c.exposedType}"
-                ))
+              ))
           .mkString(", ")
 
         val prns = parents.map(" with " + _).mkString("")
@@ -87,7 +86,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
        |import bay.driver.CustomizedPgDriver
        |import java.time._
        |import io.circe._
-       |import shared.models.slick.${Implicits.ExtString(container).toCamelCase}._
+       |import shared.models.slick.${ExtString(container).toCamelCase}._
        |
        |object $container extends {
        |  val profile = bay.driver.CustomizedPgDriver

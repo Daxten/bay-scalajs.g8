@@ -2,13 +2,13 @@ package app
 
 import io.swagger.parser.SwaggerParser
 import io.swagger.models.Swagger
-import utils.Implicits._
 
 import scala.collection.JavaConversions._
 import better.files._
 import java.io.{File => JFile}
 import java.time.OffsetDateTime
 
+import app.swagger.ModelsGen
 import io.swagger.models.properties.ArrayProperty
 import io.swagger.models.properties.Property
 import io.swagger.models.properties.RefProperty
@@ -21,10 +21,6 @@ import scala.util.Try
 object SwaggerCodegen extends App {
   val swaggerDir = file"server/conf/swagger"
   val swaggers   = swaggerDir.listRecursively.filter(_.extension.contains(".yaml")).map(e => (e, new SwaggerParser().read(e.pathAsString)))
-
-  implicit class ExtParamater(e: io.swagger.models.parameters.Parameter) {
-    def getType: Option[String] = Try(e.asInstanceOf[io.swagger.models.parameters.PathParameter].getType).toOption
-  }
 
   def property2Scala(p: Property, nested: Boolean = false): String = {
     val tpe = (p.getType, Option(p.getFormat)) match {
@@ -56,40 +52,7 @@ object SwaggerCodegen extends App {
     /*
     Create Models
      */
-    val modelsFolder = file"shared/src/main/scala/shared/models/swagger/${f.nameWithoutExtension}/$apiVersion"
-
-    swagger.getDefinitions.toVector.foreach {
-      case (name, model) =>
-        val modelName = name.toUpperCamelCase
-
-        val propertiesAsScala: Vector[String] = model.getProperties.toVector.map { e =>
-          s"${e._1.toCamelCase}: ${property2Scala(e._2)}"
-        }
-
-        val modelAsCaseClass = s"case class $modelName(${propertiesAsScala.mkString(", ")})"
-
-        val targetFile = modelsFolder./(s"$modelName.scala")
-        if (targetFile.notExists) {
-          // Create Template
-          val template =
-            s"""
-               |package shared.models.swagger.${f.nameWithoutExtension}.$apiVersion
-               |
-            |import java.time._
-               |
-            |$modelAsCaseClass
-          """.trim.stripMargin
-
-          targetFile.createIfNotExists(createParents = true).overwrite(template)
-        } else {
-          // Update existing Source
-          val source = targetFile.toJava.parse[Source].get
-          val caseClassStat =
-            modelAsCaseClass.parse[Stat].get
-          val tree = CaseClassMetaHelper.updateOrInsert(source, caseClassStat)
-          targetFile.write(ScalaFmtHelper.formatCode(tree.syntax))
-        }
-    }
+    ModelsGen.gen(swagger, apiVersion, f)
 
     /*
       Create Api
@@ -109,14 +72,14 @@ object SwaggerCodegen extends App {
             if (e.startsWith("{")) {
               val name = e.drop(1).dropRight(1)
               if (path.getOperations
-                .flatMap(e => Option(e.getParameters))
-                .flatten
-                .filter(_.getName == name)
-                .find(e => {
-                  Option(e.getIn).map(_.toLowerCase).contains("path")
-                })
-                .flatMap(_.getType)
-                .contains("integer")) {
+                    .flatMap(e => Option(e.getParameters))
+                    .flatten
+                    .filter(_.getName == name)
+                    .find(e => {
+                      Option(e.getIn).map(_.toLowerCase).contains("path")
+                    })
+                    .flatMap(_.getType)
+                    .contains("integer")) {
                 s"$${int($name)}"
               } else {
                 "$" + e
@@ -183,12 +146,12 @@ object SwaggerCodegen extends App {
             }
 
             val routerCase = s"""
-                                |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
-                                |  constructResult($methodName(${op.getParameters.toVector
-              .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
-              .map(e => s"${e.getName}")
-              .mkString(", ")}))
-                                |}
+               |case ${method.toString}(p"$playPath"$queryParameterStr) => AsyncStack${body2parser(bodyType)} { implicit request =>
+               |  constructResult($methodName(${op.getParameters.toVector
+                                  .filter(e => Seq("query", "path").contains(e.getIn.toLowerCase))
+                                  .map(e => s"${e.getName}")
+                                  .mkString(", ")}))
+               |}
              """.stripMargin
 
             val params = op.getParameters.toVector
@@ -229,13 +192,7 @@ object SwaggerCodegen extends App {
          |import io.circe.syntax._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
-         |class ${f.nameWithoutExtension.toUpperCamelCase} @Inject()(val userDao: UserDao)(implicit val ec: ExecutionContext) extends ${f.nameWithoutExtension.toUpperCamelCase}Trait {
-         |
-         |  ${routerCases.map("override " + _.abstractfunc + " = NotImplemented.pureResult").mkString("\n")}
-         |
-         |}
-         |
-         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with OptionalAuthElement with AuthConfigImpl with Circe {
+         |trait ${f.nameWithoutExtension.toUpperCamelCase}Trait extends ExtendedController with SimpleRouter with Circe {
          |  def routes: Router.Routes = {
          |   ${routerCases.map(_.routerCase).mkString}
          |  }
@@ -245,24 +202,6 @@ object SwaggerCodegen extends App {
          |
          """.trim.stripMargin
 
-    if (target.notExists) {
-      target.createIfNotExists(createParents = true).overwrite(ScalaFmtHelper.formatCode(template))
-    } else {
-      val templTrait = template
-        .parse[Source]
-        .get
-        .collect {
-          case c @ q"..$mods trait $tname[..$tparams] extends $template" =>
-            c
-        }
-        .head
-
-      val source = target.toJava.parse[Source].get.transform {
-        case q"trait $tname extends $template" if tname.value == f.nameWithoutExtension.toUpperCamelCase + "Trait" =>
-          templTrait
-      }
-
-      target.overwrite(ScalaFmtHelper.formatCode(source.syntax))
-    }
+    target.createIfNotExists(createParents = true).overwrite(ScalaFmtHelper.formatCode(template))
   }
 }
