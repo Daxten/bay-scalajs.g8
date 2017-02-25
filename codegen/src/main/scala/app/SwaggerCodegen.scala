@@ -57,7 +57,6 @@ object SwaggerCodegen extends App {
     /*
       Create Api
      */
-    val basePath = swagger.getBasePath
     val defaultExists = swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).exists(_.getTags.isEmpty)
     for {
       swaggerTag <- swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).flatMap(_.getTags).distinct ++ (if (defaultExists) Seq("default") else Seq.empty)
