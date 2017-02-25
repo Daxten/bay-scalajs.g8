@@ -58,8 +58,9 @@ object SwaggerCodegen extends App {
       Create Api
      */
     val basePath = swagger.getBasePath
+    val defaultExists = swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).exists(_.getTags.isEmpty)
     for {
-      swaggerTag <- swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).flatMap(_.getTags).distinct
+      swaggerTag <- swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).flatMap(_.getTags).distinct ++ (if (defaultExists) Seq("default") else Seq.empty)
     } {
       val packageName = f.nameWithoutExtension.toLowerCase.takeWhile(_ != '_')
       val routerName  = swaggerTag.toUpperCamelCase
@@ -68,7 +69,7 @@ object SwaggerCodegen extends App {
 
       case class RouterCase(routerCase: String, abstractfunc: String)
 
-      val routerCases: Vector[RouterCase] = swagger.getPaths.toVector.filter(_._2.getOperations.exists(_.getTags.contains(swaggerTag))).flatMap {
+      val routerCases: Vector[RouterCase] = swagger.getPaths.toVector.filter(_._2.getOperations.exists(e => e.getTags.contains(swaggerTag) || (swaggerTag == "default" && e.getTags.isEmpty))).flatMap {
         case (strPath, path) =>
           println(s"-- Creating Router for $strPath")
 
@@ -94,7 +95,7 @@ object SwaggerCodegen extends App {
             }
             .mkString("", "/", "")
 
-          path.getOperationMap.toVector.filter(_._2.getTags.exists(_ == swaggerTag)).map {
+          path.getOperationMap.toVector.filter(e => e._2.getTags.contains(swaggerTag) || (swaggerTag == "default" && e._2.getTags.isEmpty)).map {
             case (method, op) =>
               val methodName = Option(op.getOperationId)
                 .getOrElse(method.toString.toLowerCase + strPath.split('/').filterNot(_.startsWith("{")).map(_.toUpperCamelCase).mkString)
