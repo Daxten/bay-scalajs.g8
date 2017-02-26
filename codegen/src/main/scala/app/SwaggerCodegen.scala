@@ -160,6 +160,8 @@ object SwaggerCodegen extends App {
                       .getOrElse(List.empty)
                       .map(_.toLowerCase)
                       .collect {
+                        case "application/x-www-form-urlencoded" =>
+                          MultipartBody
                         case "multipart/form-data" =>
                           MultipartBody
                         case "application/json" =>
