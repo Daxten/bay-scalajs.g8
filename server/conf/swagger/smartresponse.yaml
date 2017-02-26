@@ -11,7 +11,7 @@ info:
 host: "localhost:9000"
 basePath: "/api/v1"
 schemes:
-- https
+- http
 securityDefinitions:
   api_key:
     type: apiKey
@@ -52,8 +52,6 @@ paths:
             $ref: "#/definitions/ApiTicket"
         204:
           description: "No Last Ticket exists"
-        401:
-          description: "Status 401"
   /tickets:
     post:
       summary: "Create new SupportRequest"
@@ -98,8 +96,6 @@ paths:
       responses:
         204:
           description: "Status 204"
-        401:
-          description: "Status 401"
   /tickets/{ticketId}/media:
     post:
       summary: "Add Media"
@@ -121,8 +117,6 @@ paths:
       responses:
         204:
           description: "Status 204"
-        401:
-          description: "Status 401"
   /me:
     get:
       summary: "Get My Information"
@@ -138,8 +132,6 @@ paths:
           description: "Status 200"
           schema:
             $ref: "#/definitions/UserData"
-        401:
-          description: "Status 401"
     put:
       summary: "Change my Information"
       security:
@@ -161,8 +153,6 @@ paths:
           description: "Server geupdated, Client nicht z.B., Übertragungsfehler??\
             \ Bug durch Emojis oder ähnlichem?\n\nRohdaten logen, info an  Recordbay\
             \ / Admin"
-        401:
-          description: "Status 401"
 definitions:
   ApiTicketInfo:
     type: "object"
