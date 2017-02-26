@@ -1,7 +1,8 @@
 package app
 
 import io.swagger.parser.SwaggerParser
-import io.swagger.models.Swagger
+import io.swagger.models.{Model, RefModel, Swagger}
+import io.swagger.models.parameters._
 
 import scala.collection.JavaConversions._
 import better.files._
@@ -58,6 +59,7 @@ object SwaggerCodegen extends App {
       Create Api
      */
     val defaultExists = swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).exists(_.getTags.isEmpty)
+
     for {
       swaggerTag <- swagger.getPaths.toVector.map(_._2).flatMap(_.getOperations).flatMap(_.getTags).distinct ++ (if (defaultExists) Seq("default") else Seq.empty)
     } {
@@ -123,16 +125,28 @@ object SwaggerCodegen extends App {
               object MultipartBody extends RequestBodyType
               object FileBody extends RequestBodyType
 
+              val inClassTpe: Option[String] = op.getParameters.find(_.getIn == "body") match {
+                case None => None
+                case Some(param) => param match {
+                  case e: BodyParameter => e.getSchema match {
+                    case s: RefModel => Some(s.getSimpleRef)
+                    case s: Model => Some(s.getReference)
+                  }
+                  case e: RefParameter => Some(e.getSimpleRef)
+                  case e => None
+                }
+              }
+
               val body2parser = Map[RequestBodyType, String](
                 NoBody        -> "",
-                JsonBody      -> "(circe.json)",
+                JsonBody      -> inClassTpe.fold("parse.circe")(e => s"(circe.json[$e])"),
                 MultipartBody -> "(parse.multipartFormData)",
                 FileBody      -> "(parse.temporaryFile)"
               ).withDefault(_ => "")
 
               val body2content = Map[RequestBodyType, String](
                 NoBody        -> "AnyContent",
-                JsonBody      -> "Json",
+                JsonBody      -> inClassTpe.fold("Json")(identity),
                 MultipartBody -> "MultipartFormData[Files.TemporaryFile]",
                 FileBody      -> "Files.TemporaryFile"
               ).withDefault(_ => "AnyContent")
@@ -182,7 +196,7 @@ object SwaggerCodegen extends App {
               // Functions to implement
               val abstractFunc =
                 s"""def $methodName(${params
-                  .mkString(", ")})(implicit request: RequestWithAttributes[${body2content(consumeType)}]): HttpResult[$resultType]"""
+                  .mkString(", ")})(implicit request: Request[${body2content(consumeType)}]): HttpResult[$resultType]"""
               RouterCase(routerCase.mkString, abstractFunc)
           }
       }
@@ -191,20 +205,15 @@ object SwaggerCodegen extends App {
         s"""
          |package controllers.swagger.$apiVersion.$packageName
          |
-         |import play.api.mvc._
-         |import com.google.inject.Inject
-         |import play.api.routing._
-         |import play.api.routing.sird._
-         |import play.api.libs.circe._
-         |import scala.concurrent.ExecutionContext
-         |import controllers.{AuthConfigImpl, ExtendedController}
-         |import jp.t2v.lab.play2.stackc.RequestWithAttributes
-         |import jp.t2v.lab.play2.auth.OptionalAuthElement
-         |import services.dao.UserDao
+         |import controllers.ExtendedController
          |import io.circe.Json
-         |import play.api.libs.Files
          |import io.circe.generic.auto._
          |import io.circe.syntax._
+         |import play.api.libs.Files
+         |import play.api.libs.circe._
+         |import play.api.mvc._
+         |import play.api.routing._
+         |import play.api.routing.sird._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
          |trait $routerName extends ExtendedController with SimpleRouter with Circe {

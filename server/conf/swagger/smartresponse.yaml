@@ -12,10 +12,11 @@ host: "localhost:9000"
 basePath: "/api/v1"
 schemes:
 - https
-tags:
-  - "auth"
-  - "user"
-  - "ticket"
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
 paths:
   /auth:
     post:
@@ -37,19 +38,14 @@ paths:
           description: "Status 200"
           schema:
             $ref: "#/definitions/AuthKey"
-        400:
-          description: "Sehr unerfräulicher Fall! Bei korrekter Installation nicht\
-            \ möglich. Gut loggen und Admin bescheid geben"
   /last_ticket:
     get:
       summary: "Get My Requests"
+      security:
+      - api_key: []
       tags:
       - ticket
       parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
       responses:
         200:
           description: "Ticket Id or Empty"
@@ -62,6 +58,8 @@ paths:
   /tickets:
     post:
       summary: "Create new SupportRequest"
+      security:
+      - api_key: []
       tags:
       - ticket
       consumes:
@@ -69,10 +67,6 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
       - in: "body"
         name: "body"
         required: true
@@ -86,15 +80,13 @@ paths:
   /tickets/{ticketId}:
     put:
       summary: "Updates a Ticket"
+      security:
+      - api_key: []
       tags:
       - ticket
       consumes:
       - "application/json"
       parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
       - name: "ticketId"
         in: "path"
         required: true
@@ -112,6 +104,8 @@ paths:
   /tickets/{ticketId}/media:
     post:
       summary: "Add Media"
+      security:
+      - api_key: []
       tags:
       - ticket
       consumes:
@@ -119,10 +113,6 @@ paths:
       parameters:
       - name: "ticketId"
         in: "path"
-        required: true
-        type: "string"
-      - name: "authkey"
-        in: "query"
         required: true
         type: "string"
       - name: "media"
@@ -137,16 +127,14 @@ paths:
   /me:
     get:
       summary: "Get My Information"
+      security:
+      - api_key: []
       tags:
       - user
       description: "returns the information for the current user"
       produces:
       - "application/json"
       parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
       responses:
         200:
           description: "Status 200"
@@ -156,15 +144,13 @@ paths:
           description: "Status 401"
     put:
       summary: "Change my Information"
+      security:
+      - api_key: []
       tags:
       - user
       consumes:
       - "application/json"
       parameters:
-      - name: "authkey"
-        in: "query"
-        required: true
-        type: "string"
       - in: "body"
         name: "body"
         required: true
