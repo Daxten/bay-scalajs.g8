@@ -45,7 +45,6 @@ paths:
       - api_key: []
       tags:
       - ticket
-      parameters:
       responses:
         200:
           description: "Ticket Id or Empty"
@@ -134,7 +133,6 @@ paths:
       description: "returns the information for the current user"
       produces:
       - "application/json"
-      parameters:
       responses:
         200:
           description: "Status 200"
