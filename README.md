@@ -76,11 +76,12 @@ Application.scala also has an example how to use the monad-transformers inside t
 ```
 def login: Action[AnyContent] = Action.async { implicit request =>
   val result = for {
-    form <- loginForm.bindFromRequest() |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
-    userId <- userDao.maybeLogin(form)  |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm)))
-  } yield gotoLoginSucceeded(userId)
-  
-  constructResultWithF(result)
+    form <- loginForm.bindFromRequest()       |> HttpResult.fromForm(e => BadRequest(views.html.login(e)))
+    userId <- userDao.maybeLogin(form)        |> HttpResult.fromFOption(BadRequest(views.html.login(loginForm.fill(form).withGlobalError("bad.password"))))
+    loginResult <- gotoLoginSucceeded(userId) |> HttpResult.fromFuture
+  } yield loginResult
+
+  constructResult(result)
 }
 ```
 
