@@ -2,5 +2,5 @@
 
 @main {
     <div id="root"></div>
-    @scalajs.html.scripts("client", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
+    @scalajs.html.scripts("web", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
 }

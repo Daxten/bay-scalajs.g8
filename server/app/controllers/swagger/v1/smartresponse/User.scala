@@ -9,6 +9,8 @@ import play.api.libs.circe._
 import play.api.mvc._
 import play.api.routing._
 import play.api.routing.sird._
+import scalaz._
+import Scalaz._
 import shared.models.swagger.smartresponse.v1._
 
 trait User extends ExtendedController with SimpleRouter with Circe {

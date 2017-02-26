@@ -1,7 +1,7 @@
 object Dependencies {
   // Server (jvm)
   val slickPg       = "0.15.0-M4" // https://github.com/tminglei/slick-pg
-  val slick         = "3.2.0" // http://slick.lightbend.com/
+  val slick         = "3.2.0-M2" // http://slick.lightbend.com/
   val playSlick     = "2.1.0-M1" // https://github.com/playframework/play-slick
   val playScalajs   = "1.0.0" // https://github.com/vmunier/scalajs-scripts
   val playAuth      = "0.14.2" // https://github.com/t2v/play2-auth
