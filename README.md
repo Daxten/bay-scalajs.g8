@@ -1,3 +1,5 @@
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/bay-scalajs-g8/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 > This Template is not 'officially' released yet, I use it for all of my projects and update it when I find time, I will make this release-ready in the future
 
 # bay-scalajs.g8
