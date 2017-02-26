@@ -63,7 +63,7 @@ You can find a complete list inside `project/Dependencies.scala`. I don't use an
 ## Structure
 All Api calls using Autowire should use 
 
-`type ApiResult[T] = Future[\/[ApiError, T]]` 
+`type ApiResult[T] = Future[Either[ApiError, T]]` 
 
 as the result type. You can take a look at `web/components/LoremIpsumComponent.scala` and `web/components/SimpleApiComponent.scala` on how to work with this type.
 
