@@ -5,14 +5,14 @@ import com.github.tminglei.slickpg._
 object CustomizedPgDriver extends CustomizedPgDriver
 
 trait CustomizedPgDriver
-    extends ExPostgresDriver
+    extends ExPostgresProfile
     with PgArraySupport
-    with PgDateSupport2bp
+    with PgDate2Support
     with PgEnumSupport
     with PgRangeSupport
     with PgHStoreSupport
     with PgSearchSupport
-    with NewPgCirceJsonSupport {
+    with PgCirceJsonSupport {
 
   override val api = new MyAPI {}
 

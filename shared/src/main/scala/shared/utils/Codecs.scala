@@ -2,7 +2,8 @@ package shared.utils
 
 import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
-import org.threeten.bp._
+import java.time._
+import java.time.format.DateTimeFormatter
 
 trait Codecs extends UpickleCodecs with CirceCodecs
 
@@ -10,17 +11,23 @@ object Codecs extends Codecs
 
 trait CirceCodecs {
 
+  // use more stable encodings then standard
+  private val fmt: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
+  private val fmtLocal: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS")
+  private val fmtDate: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd")
+  private val fmtTime: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
+
   def createCirceCodec[T](encode: T => String, decode: String => T): (Encoder[T], Decoder[T]) =
     (Encoder.encodeString.contramap[T](encode), Decoder.decodeString.emap(str => Either.catchNonFatal(decode(str)).leftMap(_.getMessage)))
 
   implicit val (encodeOffsetDateTimeCirce, decodeOffsetDateTimeCirce) =
-    createCirceCodec[OffsetDateTime](_.toString(), OffsetDateTime.parse)
+    createCirceCodec[OffsetDateTime](fmt.format, OffsetDateTime.parse)
   implicit val (encodeLocalDateTimeCirce, decodeLocalDateTimeCirce) =
-    createCirceCodec[LocalDateTime](_.toString(), LocalDateTime.parse)
+    createCirceCodec[LocalDateTime](fmtLocal.format, LocalDateTime.parse)
   implicit val (encodeLocalDateCirce, decodeLocalDateCirce) =
-    createCirceCodec[LocalDate](_.toString(), LocalDate.parse)
+    createCirceCodec[LocalDate](fmtDate.format, LocalDate.parse)
   implicit val (encodeLocalTimeCirce, decodeLocalTimeCirce) =
-    createCirceCodec[LocalTime](_.toString(), LocalTime.parse)
+    createCirceCodec[LocalTime](fmtTime.format, LocalTime.parse)
   implicit val (encodeDurationCirce, decodeDurationCirce) =
     createCirceCodec[Duration](_.toString(), Duration.parse)
 

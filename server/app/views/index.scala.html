@@ -2,5 +2,5 @@
 
 @main {
     <div id="root"></div>
-    @playscalajs.html.scripts("web")
+    @scalajs.html.scripts("web", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
 }

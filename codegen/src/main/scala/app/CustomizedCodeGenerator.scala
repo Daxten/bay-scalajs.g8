@@ -1,25 +1,25 @@
 package app
 
 import slick.codegen.SourceCodeGenerator
-import slick.profile.SqlProfile.ColumnOption
+import slick.sql.SqlProfile.ColumnOption
 import slick.{model => m}
 
 class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(model) {
   override val ddlEnabled = false
 
-  override def entityName =
+  override def entityName: (String) => String =
     (dbName: String) => dbName.split("_").map(_.capitalize).mkString
 
-  override def tableName = (dbName: String) => entityName(dbName) + "Table"
+  override def tableName: (String) => String = (dbName: String) => entityName(dbName) + "Table"
 
   override def Table = new Table(_) { table =>
 
-    val E = entityName(model.name.table)
-    val T = tableName(model.name.table)
-    val Q = TableValue.rawName
+    val E: String = entityName(model.name.table)
+    val T: String = tableName(model.name.table)
+    val Q: String = TableValue.rawName
 
     override def TableValue = new TableValue {
-      override def rawName = {
+      override def rawName: String = {
         val raw = entityName(model.name.asString).uncapitalize
         if (raw.endsWith("s")) raw else raw + "s"
       }
@@ -30,7 +30,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
     override def EntityType = new EntityTypeDef {
       override def doc: String = ""
 
-      override def code = {
+      override def code: String = {
         val args = columns
           .map(
             c =>
@@ -51,23 +51,23 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
 
     override def Column = new Column(_) { column =>
       override def rawType: String = model.tpe match {
-        case "java.sql.Date" => "org.threeten.bp.LocalDate"
-        case "java.sql.Time" => "org.threeten.bp.LocalTime"
+        case "java.sql.Date" => "LocalDate"
+        case "java.sql.Time" => "LocalTime"
         case "java.sql.Timestamp" =>
           model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
-            case "timestamptz" => "org.threeten.bp.OffsetDateTime"
-            case _             => "org.threeten.bp.LocalDateTime"
-          } getOrElse "org.threeten.bp.LocalDateTime"
+            case "timestamptz" => "OffsetDateTime"
+            case _             => "LocalDateTime"
+          } getOrElse "LocalDateTime"
         case "String" =>
           model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
-            case "json" | "jsonb" => "io.circe.Json"
-            case "hstore"   => "Map[String, String]"
-            case "_text"    => "List[String]"
-            case "_varchar" => "List[String]"
-            case "geometry" => "com.vividsolutions.jts.geom.Geometry"
-            case "int8[]"   => "List[Long]"
-            case "interval" => "org.threeten.bp.Duration"
-            case e          => "String"
+            case "json" | "jsonb" => "Json"
+            case "hstore"         => "Map[String, String]"
+            case "_text"          => "List[String]"
+            case "_varchar"       => "List[String]"
+            case "geometry"       => "com.vividsolutions.jts.geom.Geometry"
+            case "int8[]"         => "List[Long]"
+            case "interval"       => "Duration"
+            case e                => "String"
           } getOrElse "String"
         case _ => super.rawType.asInstanceOf[String]
       }
@@ -75,7 +75,7 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
       override def code =
         s"""val $name: Rep[$actualType] = column[$actualType]("${model.name}"${options.filter(_ => !rawType.startsWith("List")).map(", " + _).mkString("")})"""
 
-      override def rawName = entityName(model.name).uncapitalize
+      override def rawName: String = entityName(model.name).uncapitalize
     }
   }
 
@@ -84,13 +84,17 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
        |package $pkg
        |
        |import bay.driver.CustomizedPgDriver
-       |import shared.models.Shared$container._
+       |import java.time._
+       |import io.circe._
+       |import shared.models.slick.${ExtString(container).toCamelCase}._
        |
-       |// AUTO-GENERATED Slick data model
+       |object $container extends {
+       |  val profile = bay.driver.CustomizedPgDriver
+       |} with $container
        |
        |trait $container${parentType.map(t => s" extends $t").getOrElse("")} {
        |
-       |  val profile = CustomizedPgDriver
+       |  val profile: bay.driver.CustomizedPgDriver
        |  import profile.api._
        |
        |  ${indent(code.replace("$CONTAINER", container))}

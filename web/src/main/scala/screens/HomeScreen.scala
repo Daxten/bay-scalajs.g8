@@ -1,11 +1,14 @@
 package screens
 
+import java.time.OffsetDateTime
+
 import autowire._
 import components.LoremIpsumComponent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import models.Locs.Loc
-import services.{AjaxClient, Api}
+import services.AjaxClient
+import shared.services.WiredApi
 import shared.utils.{Codecs, LoremIpsum}
 import utils.ReactTags
 
@@ -20,8 +23,8 @@ object HomeScreen extends ReactTags with Codecs {
   class Backend($ : BackendScope[Props, State]) {
 
     def mounted() = Callback {
-      AjaxClient[Api].now().call().foreach {
-        case \/-(time) => println(time.toString())
+      AjaxClient[WiredApi].now().call().foreach {
+        case \/-(time) => println(time.toString)
         case -\/(e)    => org.scalajs.dom.window.alert(e.toString)
       }
     }
@@ -30,7 +33,8 @@ object HomeScreen extends ReactTags with Codecs {
       <.div(
         <.h2("Lorem Ipsum"),
         <.div(
-          LoremIpsum.paragraphs(4).map(<.p(_))
+          LoremIpsum.paragraphs(4).map(<.p(_)),
+          OffsetDateTime.now.toString
         ),
         <.div(^.marginTop := "40px")(
           LoremIpsumComponent(props.c)

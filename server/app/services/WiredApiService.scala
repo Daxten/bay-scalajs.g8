@@ -1,14 +1,15 @@
 package services
 
-import org.threeten.bp.OffsetDateTime
-import shared.models.ApiModel.ApiResult
-import shared.models.SharedDefault._
+import java.time.OffsetDateTime
+import shared.models.WiredApiModel.ApiResult
 import shared.utils.Implicits._
 import shared.utils.LoremIpsum
+import shared.models.slick.default._
+import shared.services.WiredApi
 import scalaz.Scalaz._
 import scalaz._
 
-class ApiService(user: Option[User]) extends Api {
+class WiredApiService(user: Option[User]) extends WiredApi {
 
   override def ping(): ApiResult[String] = "pong".right.asFuture
 

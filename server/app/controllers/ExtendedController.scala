@@ -33,14 +33,13 @@ trait ExtendedController extends Controller with Implicits with Codecs {
       EitherT[Future, Result, A](foa.map(_ \/> failure))
     def fromFEither[A, B](failure: B => Result)(fva: Future[B \/ A]): HttpResult[A] =
       EitherT[Future, Result, A](fva.map(_.leftMap(failure)))
-    def fromForm[FormType](failure: Form[FormType] => Result)(form: Form[FormType])(
-        implicit request: Request[_]): HttpResult[FormType] =
-      EitherT[Future, Result, FormType](
-        form.bindFromRequest.fold(errorForm => -\/(failure(errorForm)).asFuture,
-                                  formEntity => \/-(formEntity).asFuture))
+    def fromForm[FormType](failure: Form[FormType] => Result)(form: Form[FormType])(implicit request: Request[_]): HttpResult[FormType] =
+      EitherT[Future, Result, FormType](form.bindFromRequest.fold(errorForm => -\/(failure(errorForm)).asFuture, formEntity => \/-(formEntity).asFuture))
   }
 
   def constructResult(result: HttpResult[Result]): Future[Result] = result.run.map(_.merge)
-  def constructResultWithF(result: HttpResult[Future[Result]]): Future[Result] =
-    result.run.flatMap(_.leftMap(_.asFuture).merge)
+
+  implicit class ExtResult(e: Result) {
+    def pureResult: HttpResult[Result] = EitherT[Future, Result, Result](Future.successful(\/-(e)))
+  }
 }

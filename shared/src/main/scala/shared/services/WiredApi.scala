@@ -1,9 +1,9 @@
-package services
+package shared.services
 
-import org.threeten.bp.OffsetDateTime
-import shared.models.ApiModel.ApiResult
+import java.time.OffsetDateTime
+import shared.models.WiredApiModel.ApiResult
 
-trait Api {
+trait WiredApi {
   def ping(): ApiResult[String]
   def now(): ApiResult[OffsetDateTime]
 

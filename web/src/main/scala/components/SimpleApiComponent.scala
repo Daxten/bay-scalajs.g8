@@ -3,7 +3,7 @@ package components
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactComponentU, TopNode}
 import models.Locs.Loc
-import shared.models.ApiModel.{ApiError, ApiResult}
+import shared.models.WiredApiModel.{ApiError, ApiResult}
 import shared.utils.Implicits
 import utils.ReactTags
 

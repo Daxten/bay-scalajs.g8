@@ -11,7 +11,7 @@ trait AuthConfigImpl extends AuthConfig with ExtendedController {
   val userDao: UserDao
 
   type Id        = Int
-  type User      = shared.models.SharedDefault.User
+  type User      = shared.models.slick.default.User
   type Authority = User => Future[Boolean]
   val idTag: ClassTag[Id]          = classTag[Id]
   val sessionTimeoutInSeconds: Int = 3600

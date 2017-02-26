@@ -3,7 +3,7 @@ package shared.models
 import scala.concurrent.Future
 import scalaz.\/
 
-object ApiModel {
+object WiredApiModel {
   sealed trait ApiError
   case object NotFound extends ApiError
 

@@ -4,21 +4,18 @@ import bay.driver.CustomizedPgDriver
 import com.github.t3hnar.bcrypt._
 import com.google.inject.{Inject, Singleton}
 import models.forms.LoginForm
-import org.threeten.bp.OffsetDateTime
+import java.time._
 import play.api.Logger
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import shared.models.SharedDefault._
 import shared.utils.Implicits
-
 import scala.concurrent.{ExecutionContext, Future}
+import shared.models.slick.default._
+import models.slick.Default._
 
 @Singleton
-class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-    extends models.auto_generated.slick.Default
-    with HasDatabaseConfigProvider[CustomizedPgDriver]
-    with Implicits {
+class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[CustomizedPgDriver] with Implicits {
 
-  import driver.api._
+  import profile.api._
 
   def findUserByEmail(email: String): Future[Option[User]] =
     db.run(users.filter(_.email === email.toLowerCase).result.headOption)

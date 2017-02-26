@@ -2,9 +2,10 @@ package components
 
 import autowire._
 import japgolly.scalajs.react.{BackendScope, Callback}
-import services.{AjaxClient, Api}
+import services.AjaxClient
+import shared.services.WiredApi
 
-object LoremIpsumComponent extends SimpleApiComponent(AjaxClient[Api].createLoremIpsum().call()) {
+object LoremIpsumComponent extends SimpleApiComponent(AjaxClient[WiredApi].createLoremIpsum().call()) {
   override def renderLoading($ : BackendScope[Props, State]): ReactTag = {
     <.div("Loading ..")
   }
