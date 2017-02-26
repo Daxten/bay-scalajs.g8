@@ -67,7 +67,7 @@ object SwaggerCodegen extends App {
                                                                                                                  else Seq.empty)
     } {
       val packageName = f.nameWithoutExtension.toLowerCase.takeWhile(_ != '_')
-      val routerName  = swaggerTag.toUpperCamelCase
+      val routerName  = swaggerTag.toUpperCamelCase + "Router"
       println(s"- Running Codegen for Swagger Tag $swaggerTag")
       val target = file"server/app/controllers/swagger/$apiVersion/$packageName/$routerName.scala"
 
