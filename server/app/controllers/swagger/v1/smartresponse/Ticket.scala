@@ -16,28 +16,48 @@ trait Ticket extends ExtendedController with SimpleRouter with Circe {
 
     case GET(p"/last_ticket") =>
       Action.async { implicit request =>
-        constructResult(getLast_ticket().map(e => Ok(e.asJson)))
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(getLast_ticket(apiKey).map(e => Ok(e.asJson)))
+        }
       }
 
     case POST(p"/tickets") =>
       Action.async(circe.json[ApiTicketInfo]) { implicit request =>
-        constructResult(postTickets().map(e => Ok(e.asJson)))
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(postTickets(apiKey).map(e => Ok(e.asJson)))
+        }
       }
 
     case PUT(p"/tickets/${ticketId}") =>
       Action.async(circe.json[ApiTicketInfo]) { implicit request =>
-        constructResult(putTickets(ticketId))
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(putTickets(ticketId, apiKey))
+        }
       }
 
     case POST(p"/tickets/${ticketId}/media") =>
       Action.async(parse.multipartFormData) { implicit request =>
-        constructResult(postTicketsMedia(ticketId))
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(postTicketsMedia(ticketId, apiKey))
+        }
       }
 
   }
 
-  def getLast_ticket()(implicit request: Request[AnyContent]): HttpResult[ApiTicket]
-  def postTickets()(implicit request: Request[ApiTicketInfo]): HttpResult[ApiTicket]
-  def putTickets(ticketId: String)(implicit request: Request[ApiTicketInfo]): HttpResult[Result]
-  def postTicketsMedia(ticketId: String)(implicit request: Request[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result]
+  def getLast_ticket(apiKey: String)(implicit request: Request[AnyContent]): HttpResult[ApiTicket]
+  def postTickets(apiKey: String)(implicit request: Request[ApiTicketInfo]): HttpResult[ApiTicket]
+  def putTickets(ticketId: String, apiKey: String)(implicit request: Request[ApiTicketInfo]): HttpResult[Result]
+  def postTicketsMedia(ticketId: String, apiKey: String)(implicit request: Request[MultipartFormData[Files.TemporaryFile]]): HttpResult[Result]
 }

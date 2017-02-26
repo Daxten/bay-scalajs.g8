@@ -16,16 +16,26 @@ trait User extends ExtendedController with SimpleRouter with Circe {
 
     case GET(p"/me") =>
       Action.async { implicit request =>
-        constructResult(getMe().map(e => Ok(e.asJson)))
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(getMe(apiKey).map(e => Ok(e.asJson)))
+        }
       }
 
     case PUT(p"/me") =>
       Action.async(circe.json[UserData]) { implicit request =>
-        constructResult(putMe())
+        val optApiKey = request.headers.get("api_key")
+        optApiKey match {
+          case None => Unauthorized.asFuture
+          case Some(apiKey) =>
+            constructResult(putMe(apiKey))
+        }
       }
 
   }
 
-  def getMe()(implicit request: Request[AnyContent]): HttpResult[UserData]
-  def putMe()(implicit request: Request[UserData]): HttpResult[Result]
+  def getMe(apiKey: String)(implicit request: Request[AnyContent]): HttpResult[UserData]
+  def putMe(apiKey: String)(implicit request: Request[UserData]): HttpResult[Result]
 }
