@@ -95,7 +95,7 @@ lazy val server = (project in file("server"))
     // dockerRepository      := Some("my-repository"),
     dockerExposedVolumes := Seq("/opt/docker/logs"),
     dockerCommands ++= Seq(
-      ExecCmd("RUN", "chmod", "u+x", s"$${(defaultLinuxInstallLocation in Docker).value}/bin/$${executableScriptName.value}")
+      ExecCmd("RUN", "chmod", "u+x", s"\${(defaultLinuxInstallLocation in Docker).value}/bin/\${executableScriptName.value}")
     )
   )
   .dependsOn(dbdriver, dbschema)
