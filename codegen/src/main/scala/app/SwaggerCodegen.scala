@@ -155,14 +155,18 @@ object SwaggerCodegen extends App {
                 // atm only support either json or multipart/form-data
                 val consumeType: RequestBodyType = {
                   if (Seq("POST", "PUT").contains(method.toString)) {
-                    Option(op.getConsumes).flatMap(_.headOption).map(_.toLowerCase) match {
-                      case Some("multipart/form-data") =>
-                        MultipartBody
-                      case Some("application/json") =>
-                        JsonBody
-                      case _ =>
-                        FileBody
-                    }
+                    Option(op.getConsumes)
+                      .map(_.toList)
+                      .getOrElse(List.empty)
+                      .map(_.toLowerCase)
+                      .collect {
+                        case "multipart/form-data" =>
+                          MultipartBody
+                        case "application/json" =>
+                          JsonBody
+                      }
+                      .headOption
+                      .getOrElse(NoBody)
                   } else {
                     NoBody
                   }
@@ -289,8 +293,7 @@ object SwaggerCodegen extends App {
          |import play.api.mvc._
          |import play.api.routing._
          |import play.api.routing.sird._
-         |import scalaz._
-         |import Scalaz._
+         |import cats.implicits._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
          |trait $routerName extends ExtendedController with SimpleRouter with Circe {
