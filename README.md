@@ -41,10 +41,15 @@ Generate Swagger router traits / case classes from swagger files inside conf/swa
 
 The Swagger codegen is not complete but supports a bunch of stuff already:
 * generation of a typesafe version of  all paths 
+
 > Only the "right" way is typesafe in this case, since there is a bunch of stuff which can go wrong, you can always return any result as an error. If you've defined these errors in swagger you will be able to use the generated case classes for these but  the error-side is never typesafe
+
 >> In general, only json is supported as a serializer. I would like to auto-deserialize MultipartFormData into the right case class, but that is not supported atm. Though you can still use multipartformdata, it's just not as typesafe as the rest
+
 * typesafe api_key-security usage via Header or Query
+
 > more security support in the future
+
 * grouping of routes into traits by tag
 * all generated case classes can be changed, rerunning the swagger codegen will preserve any changes to the body
 * multiple swagger configs in 1 project are supported
