@@ -6,8 +6,7 @@ import models.Locs.Loc
 import shared.models.WiredApiModel.{ApiError, ApiResult}
 import shared.utils.Implicits
 import utils.ReactTags
-
-import scalaz.{-\/, \/-}
+import cats.implicits._
 
 abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags with Implicits {
 
@@ -32,9 +31,9 @@ abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags wi
         _.copy(error = None, content = None), {
           Callback.future {
             load.map {
-              case \/-(e) =>
+              case Right(e) =>
                 $.modState(_.copy(error = None, content = e.asOption))
-              case -\/(error) =>
+              case Left(error) =>
                 $.modState(_.copy(error = Some(Right(error))))
             } recover {
               case e: Throwable =>

@@ -11,8 +11,7 @@ import services.AjaxClient
 import shared.services.WiredApi
 import shared.utils.{Codecs, LoremIpsum}
 import utils.ReactTags
-
-import scalaz.{-\/, \/-}
+import cats.implicits._
 
 object HomeScreen extends ReactTags with Codecs {
 
@@ -24,8 +23,8 @@ object HomeScreen extends ReactTags with Codecs {
 
     def mounted() = Callback {
       AjaxClient[WiredApi].now().call().foreach {
-        case \/-(time) => println(time.toString)
-        case -\/(e)    => org.scalajs.dom.window.alert(e.toString)
+        case Right(time) => println(time.toString)
+        case Left(e)    => org.scalajs.dom.window.alert(e.toString)
       }
     }
 

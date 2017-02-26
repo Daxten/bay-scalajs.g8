@@ -103,14 +103,14 @@ lazy val server = (project in file("server"))
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "autowire"      % autowire,
-    "com.lihaoyi" %%% "scalarx"       % scalarx,
-    "me.chrons"   %%% "diode-data"    % diode,
-    "org.scalaz"  %%% "scalaz-core"   % scalaz,
-    "io.circe"    %%% "circe-core"    % circeVersion,
-    "io.circe"    %%% "circe-generic" % circeVersion,
-    "io.circe"    %%% "circe-parser"  % circeVersion,
-    "com.lihaoyi" %%% "upickle"       % upickle
+    "com.lihaoyi"   %%% "autowire"      % autowire,
+    "com.lihaoyi"   %%% "scalarx"       % scalarx,
+    "me.chrons"     %%% "diode-data"    % diode,
+    "org.typelevel" %%% "cats"          % cats,
+    "io.circe"      %%% "circe-core"    % circeVersion,
+    "io.circe"      %%% "circe-generic" % circeVersion,
+    "io.circe"      %%% "circe-parser"  % circeVersion,
+    "com.lihaoyi"   %%% "upickle"       % upickle
   ))
   .jsConfigure(_ enablePlugins ScalaJSPlugin)
   .jsSettings()

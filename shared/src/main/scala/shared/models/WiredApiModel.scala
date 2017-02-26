@@ -1,7 +1,6 @@
 package shared.models
 
 import scala.concurrent.Future
-import scalaz.\/
 
 object WiredApiModel {
   sealed trait ApiError
@@ -9,5 +8,5 @@ object WiredApiModel {
 
   case object NoContent
 
-  type ApiResult[T] = Future[\/[ApiError, T]]
+  type ApiResult[T] = Future[Either[ApiError, T]]
 }

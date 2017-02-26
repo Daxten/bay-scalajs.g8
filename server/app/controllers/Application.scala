@@ -9,12 +9,12 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import services._
+import cats.implicits._
 import services.dao.UserDao
 import shared.services.WiredApi
 import upickle.default._
 
 import scala.concurrent.ExecutionContext
-import scalaz.Scalaz._
 
 class Application @Inject()(val messagesApi: MessagesApi, val userDao: UserDao)(implicit val ec: ExecutionContext)
     extends ExtendedController

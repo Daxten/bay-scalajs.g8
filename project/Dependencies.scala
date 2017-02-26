@@ -23,7 +23,7 @@ object Dependencies {
   val upickle       = "0.4.3" // http://www.lihaoyi.com/upickle-pprint/upickle/
   val scalarx       = "0.3.2" // https://github.com/lihaoyi/scala.rx
   val diode         = "1.0.0" // https://github.com/ochrons/diode
-  val scalaz        = "7.2.8" // https://github.com/scalaz/scalaz
+  val cats          = "0.9.0" // https://github.com/typelevel/cats
   val scalaJavaTime = "2.0.0-M8" // https://github.com/cquiroz/scala-java-time
   val circeVersion  = "0.7.0" // https://circe.github.io/circe
 
