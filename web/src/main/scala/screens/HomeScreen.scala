@@ -1,5 +1,7 @@
 package screens
 
+import java.time.OffsetDateTime
+
 import autowire._
 import components.LoremIpsumComponent
 import japgolly.scalajs.react._
@@ -31,7 +33,8 @@ object HomeScreen extends ReactTags with Codecs {
       <.div(
         <.h2("Lorem Ipsum"),
         <.div(
-          LoremIpsum.paragraphs(4).map(<.p(_))
+          LoremIpsum.paragraphs(4).map(<.p(_)),
+          OffsetDateTime.now.toString
         ),
         <.div(^.marginTop := "40px")(
           LoremIpsumComponent(props.c)

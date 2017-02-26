@@ -264,6 +264,8 @@ object SwaggerCodegen extends App {
          |import play.api.mvc._
          |import play.api.routing._
          |import play.api.routing.sird._
+         |import scalaz._
+         |import Scalaz._
          |import shared.models.swagger.${f.nameWithoutExtension}.$apiVersion._
          |
          |trait $routerName extends ExtendedController with SimpleRouter with Circe {
