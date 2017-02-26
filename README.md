@@ -59,10 +59,7 @@ The Swagger codegen is not complete but supports a bunch of stuff already:
 This is a swagger-first approach. In my experience it is easier to talk about swagger definitions in the team then about scala code. Also this way all swagger tooling can be reused.
 
 ## Used Libaries
-You can find a complete list inside `project/Dependencies.scala`. I don't use any RC, M or pre-release libraries for this template. 
-`scala-java-time` is the only exception since there is no release for scalajs yet and it's working really well already (with the exception of timezones, which are not yet supported)
-
-Talking about time, you will have to import `org.threeten.bp` for time, this will change in the future since `scala-java-time` already supports `java.time` imports.
+You can find a complete list inside `project/Dependencies.scala`. I don't use any RC, M or pre-release libraries for this template.
 
 
 ## Structure
