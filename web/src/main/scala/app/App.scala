@@ -6,12 +6,12 @@ import scala.scalajs.js.JSApp
 
 object App extends JSApp {
 
-  val component: ReactComponentC.ConstProps[Unit, Unit, Unit, TopNode] =
-    ReactComponentB[Unit]("App").render(_ => AppRouter.component()).build
+  private val component = ScalaComponent.build[Unit]("App").render(_ => AppRouter.component().vdomElement).build
 
   def main(): Unit = {
     println("Application starting..")
-    ReactDOM.render(component(), dom.document.getElementById("root"))
+
+    component().renderIntoDOM(dom.document.getElementById("root"))
   }
 
 }

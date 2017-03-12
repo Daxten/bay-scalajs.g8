@@ -3,9 +3,8 @@ package components
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
 import models.Locs.Loc
-import utils.ReactTags
-
-object LayoutComponent extends ReactTags {
+import utils.HtmlTags
+object LayoutComponent extends HtmlTags {
 
   case class Props(c: RouterCtl[Loc], r: Resolution[Loc])
 
@@ -27,7 +26,7 @@ object LayoutComponent extends ReactTags {
     }
   }
 
-  private val component = ReactComponentB[Props]("LayoutComponent").initialState(State()).renderBackend[Backend].componentDidMount(_.backend.mounted()).build
+  private val component = ScalaComponent.build[Props]("LayoutComponent").initialState(State()).renderBackend[Backend].componentDidMount(_.backend.mounted()).build
 
   def apply(c: RouterCtl[Loc], r: Resolution[Loc]) = component(Props(c, r))
 }

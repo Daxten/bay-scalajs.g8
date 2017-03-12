@@ -1,15 +1,15 @@
 package components
 
+import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.extra.LogLifecycle
-import japgolly.scalajs.react.{ReactComponentB, ReactComponentU, TopNode}
-import utils.ReactTags
+import utils.HtmlTags
 
-object TestComponent extends ReactTags {
+object TestComponent extends HtmlTags {
 
-  private val component = ReactComponentB[Unit]("TestComponent")
+  private val component = ScalaComponent.build[Unit]("TestComponent")
     .render(_ => <.div("I'm only here to log my lifecycle."))
     .configure(LogLifecycle.short)
     .build
 
-  def apply(): ReactComponentU[Unit, Unit, Unit, TopNode] = component()
+  def apply() = component()
 }

@@ -12,11 +12,11 @@ object Dependencies {
   val swaggerParser = "1.0.25" // https://github.com/swagger-api/swagger-parser
 
   // ScalaJs
-  val scalajsReact = "0.11.3" // https://github.com/japgolly/scalajs-react/blob/master/doc/USAGE.md
+  val scalajsReact = "1.0.0-RC1" // https://github.com/japgolly/scalajs-react/blob/master/doc/USAGE.md
   val scalajsDom   = "0.9.0" // https://scala-js.github.io/scala-js-dom/
 
   // jsDependencies
-  val react = "15.3.2" // https://facebook.github.io/react/
+  val react = "15.4.2" // https://facebook.github.io/react/
 
   // Shared Dependencies
   val autowire      = "0.2.6" // https://github.com/lihaoyi/autowire

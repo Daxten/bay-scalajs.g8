@@ -10,10 +10,10 @@ import models.Locs.Loc
 import services.AjaxClient
 import shared.services.WiredApi
 import shared.utils.{Codecs, LoremIpsum}
-import utils.ReactTags
+import utils.HtmlTags
 import cats.implicits._
 
-object HomeScreen extends ReactTags with Codecs {
+object HomeScreen extends HtmlTags with Codecs {
 
   case class Props(c: RouterCtl[Loc])
 
@@ -28,11 +28,11 @@ object HomeScreen extends ReactTags with Codecs {
       }
     }
 
-    def render(props: Props, state: State): ReactTag = {
+    def render(props: Props, state: State): VdomTag = {
       <.div(
         <.h2("Lorem Ipsum"),
         <.div(
-          LoremIpsum.paragraphs(4).map(<.p(_)),
+          LoremIpsum.paragraphs(4).map(<.p(_)).toTagMod,
           OffsetDateTime.now.toString
         ),
         <.div(^.marginTop := "40px")(
@@ -42,11 +42,11 @@ object HomeScreen extends ReactTags with Codecs {
     }
   }
 
-  private val component = ReactComponentB[Props]("HomeScreen")
+  private val component = ScalaComponent.build[Props]("HomeScreen")
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount(_.backend.mounted())
     .build
 
-  def apply(c: RouterCtl[Loc]): ReactComponentU[Props, State, Backend, TopNode] = component(Props(c))
+  def apply(c: RouterCtl[Loc]) = component(Props(c))
 }

@@ -13,10 +13,10 @@ object AppRouter {
       import dsl._
 
       (
-        staticRoute(root, HomeLoc) ~> renderR(ctl => HomeScreen(ctl))
+        staticRoute(root, HomeLoc) ~> renderR(ctl => HomeScreen(ctl).vdomElement)
       ).notFound(redirectToPage(HomeLoc)(Redirect.Replace))
     }
-    .renderWith(LayoutComponent.apply)
+    .renderWith((ctl, res) => LayoutComponent(ctl, res).vdomElement)
 
   val component = Router(BaseUrl.fromWindowOrigin_/, routerConfig)
 }

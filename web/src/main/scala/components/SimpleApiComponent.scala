@@ -1,14 +1,14 @@
 package components
 
+import japgolly.scalajs.react.component.Scala.Unmounted
 import japgolly.scalajs.react.extra.router.RouterCtl
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactComponentU, TopNode}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent}
 import models.Locs.Loc
 import shared.models.WiredApiModel.{ApiError, ApiResult}
 import shared.utils.Implicits
-import utils.ReactTags
-import cats.implicits._
+import utils.HtmlTags
 
-abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags with Implicits {
+abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends HtmlTags with Implicits {
 
   type Error = Either[Throwable, ApiError]
 
@@ -16,13 +16,13 @@ abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags wi
 
   case class State(content: Option[T] = None, error: Option[Error] = None)
 
-  def renderLayout(e: TagMod): ReactTag
+  def renderLayout(e: TagMod): VdomTag
 
-  def renderLoading($ : BackendScope[Props, State]): ReactTag
+  def renderLoading($ : BackendScope[Props, State]): VdomTag
 
-  def renderError(e: Error, $ : BackendScope[Props, State]): ReactTag
+  def renderError(e: Error, $ : BackendScope[Props, State]): VdomTag
 
-  def renderContent(content: T, refresh: Callback, $ : BackendScope[Props, State]): ReactTag
+  def renderContent(content: T, refresh: Callback, $ : BackendScope[Props, State]): VdomTag
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -43,7 +43,7 @@ abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags wi
         }
       )
 
-    def render(props: Props, state: State): ReactTag = {
+    def render(props: Props, state: State): VdomTag = {
       renderLayout((state.content, state.error) match {
         case (None, None) =>
           renderLoading($)
@@ -55,11 +55,11 @@ abstract class SimpleApiComponent[T](load: => ApiResult[T]) extends ReactTags wi
     }
   }
 
-  private val component = ReactComponentB[Props]("SimpleFutureComponent")
+  private val component = ScalaComponent.build[Props]("SimpleFutureComponent")
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount(e => e.backend.mounted(e.props, e.state))
     .build
 
-  def apply(c: RouterCtl[Loc]): ReactComponentU[Props, State, Backend, TopNode] = component(Props(c))
+  def apply(c: RouterCtl[Loc]): Unmounted[Props, State, Backend] = component(Props(c))
 }
