@@ -1,6 +1,8 @@
 package bay.driver
 
 import com.github.tminglei.slickpg._
+import com.github.tminglei.slickpg.str.PgStringExtensions
+import com.github.tminglei.slickpg.str.PgStringSupport
 
 object CustomizedPgDriver extends CustomizedPgDriver
 
@@ -12,7 +14,8 @@ trait CustomizedPgDriver
     with PgRangeSupport
     with PgHStoreSupport
     with PgSearchSupport
-    with PgCirceJsonSupport {
+    with PgCirceJsonSupport
+    with PgStringSupport {
 
   override val api = new MyAPI {}
 
@@ -25,6 +28,7 @@ trait CustomizedPgDriver
       with SearchAssistants
       with DateTimeImplicits
       with JsonImplicits
+      with PgStringImplicits
 
   override def pgjson: String = "jsonb"
 }

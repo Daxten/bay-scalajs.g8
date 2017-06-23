@@ -1,3 +1,4 @@
+// scalafmt: { maxColumn = 120 }
 package app
 
 import java.io.{File => JFile}
@@ -27,21 +28,21 @@ object DbCodegen extends App {
     dbConfig <- config.getObject("slick.dbs")
   } yield {
     val short = dbConfig._1
-    val name  = short.capitalize
+    val name = short.capitalize
 
-    val url      = config.getString(s"slick.dbs.$short.db.url")
-    val driver   = config.getString(s"slick.dbs.$short.db.driver")
-    val user     = config.getString(s"slick.dbs.$short.db.user")
+    val url = config.getString(s"slick.dbs.$short.db.url")
+    val driver = config.getString(s"slick.dbs.$short.db.driver")
+    val user = config.getString(s"slick.dbs.$short.db.user")
     val password = config.getString(s"slick.dbs.$short.db.password")
 
     val excluded = List("schema_version") ++ config.getStringList(s"slick.dbs.$short.db.exclude")
 
     val profile = CustomizedPgDriver
-    val db      = CustomizedPgDriver.api.Database.forURL(url, driver = driver, user = user, password = password)
+    val db = CustomizedPgDriver.api.Database.forURL(url, driver = driver, user = user, password = password)
 
     if (args.contains("recreate")) {
       println("- Removing Database to rerun all migrations")
-      val c         = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
+      val c = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
       val statement = c.createStatement()
       try {
         statement.executeUpdate(s"DROP DATABASE ${url.reverse.takeWhile(_ != '/').reverse};")
@@ -54,7 +55,7 @@ object DbCodegen extends App {
     }
 
     println("- Creating Database if necessary")
-    val c         = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
+    val c = DriverManager.getConnection(url.reverse.dropWhile(_ != '/').reverse, user, password)
     val statement = c.createStatement()
     try {
       statement.executeUpdate(s"CREATE DATABASE ${url.reverse.takeWhile(_ != '/').reverse};")
@@ -74,14 +75,21 @@ object DbCodegen extends App {
 
     println("- Starting codegeneration task..")
     def sourceGen =
-      db.run(profile.createModel(Option(profile.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))))).map { model =>
-        new CustomizedCodeGenerator(model)
-      }
+      db.run(profile.createModel(Option(profile.defaultTables.map(ts =>
+          ts.filterNot(t => excluded contains t.name.name)))))
+        .map { model =>
+          new CustomizedCodeGenerator(model)
+        }
 
     Await.ready(
       sourceGen
-        .map(codegen =>
-          codegen.writeToFile("bay.driver.CustomizedPgDriver", "dbschema/src/main/scala", "models.slick", name, s"$name.scala"))
+        .map(
+          codegen =>
+            codegen.writeToFile("bay.driver.CustomizedPgDriver",
+                                "dbschema/src/main/scala",
+                                "models.slick",
+                                name,
+                                s"$name.scala"))
         .recover {
           case e: Throwable => e.printStackTrace()
         },
@@ -89,15 +97,20 @@ object DbCodegen extends App {
     )
 
     println("- Parsing generated slick-model")
-    val createdFile       = file"dbschema/src/main/scala/models/slick/$name.scala"
-    val modelSource       = createdFile.contentAsString
-    val sharedCaseClasses = modelSource.split("\n").map(_.trim).filter(_.startsWith("case class"))
-    val filteredSource    = modelSource.split("\n").filterNot(_.trim.startsWith("case class")).mkString("\n")
+    val createdFile = file"dbschema/src/main/scala/models/slick/$name.scala"
+    val modelSource = createdFile.contentAsString
+    val sharedCaseClasses =
+      modelSource.split("\n").map(_.trim).filter(_.startsWith("case class"))
+    val filteredSource = modelSource
+      .split("\n")
+      .filterNot(_.trim.startsWith("case class"))
+      .mkString("\n")
     println("Saving filtered slick-model")
     createdFile.overwrite(filteredSource)
 
     // Creating Shared Models
-    val path = file"shared/src/main/scala/shared/models/slick/${name.toCamelCase}"
+    val path =
+      file"shared/src/main/scala/shared/models/slick/${name.toCamelCase}"
     sharedCaseClasses.foreach { caseClass =>
       val caseClassStat = caseClass.parse[Stat].get
       val modelName = caseClassStat.collect {
@@ -124,8 +137,8 @@ object DbCodegen extends App {
       } else {
         println(s"-- Loading ${targetFile.path.toString}")
 
-        val source = targetFile.toJava.parse[Source].get
-        val tree   = CaseClassMetaHelper.updateOrInsert(source, caseClassStat)
+        val source = targetFile.contentAsString.parse[Source].get
+        val tree = CaseClassMetaHelper.updateOrInsert(source, caseClassStat)
         targetFile.write(ScalaFmtHelper.formatCode(tree.syntax))
       }
     }

@@ -1,7 +1,8 @@
 package shared.utils
 
 import cats.syntax.either._
-import io.circe.{Decoder, Encoder}
+import io.circe.Decoder
+import io.circe.Encoder
 import java.time._
 import java.time.format.DateTimeFormatter
 
@@ -12,13 +13,20 @@ object Codecs extends Codecs
 trait CirceCodecs {
 
   // use more stable encodings then standard
-  private val fmt: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
-  private val fmtLocal: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS")
-  private val fmtDate: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd")
-  private val fmtTime: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
+  private val fmt: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
+  private val fmtLocal: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS")
+  private val fmtDate: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("uuuu-MM-dd")
+  private val fmtTime: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
 
-  def createCirceCodec[T](encode: T => String, decode: String => T): (Encoder[T], Decoder[T]) =
-    (Encoder.encodeString.contramap[T](encode), Decoder.decodeString.emap(str => Either.catchNonFatal(decode(str)).leftMap(_.getMessage)))
+  def createCirceCodec[T](encode: T => String,
+                          decode: String => T): (Encoder[T], Decoder[T]) =
+    (Encoder.encodeString.contramap[T](encode),
+     Decoder.decodeString.emap(str =>
+       Either.catchNonFatal(decode(str)).leftMap(_.getMessage)))
 
   implicit val (encodeOffsetDateTimeCirce, decodeOffsetDateTimeCirce) =
     createCirceCodec[OffsetDateTime](fmt.format, OffsetDateTime.parse)
@@ -38,7 +46,8 @@ object CirceCodecs extends CirceCodecs
 trait UpickleCodecs {
   import upickle.default._
 
-  def createUpickleCode[T](encode: T => String, decode: String => T): (Writer[T], Reader[T]) =
+  def createUpickleCode[T](encode: T => String,
+                           decode: String => T): (Writer[T], Reader[T]) =
     (Writer[T](e => upickle.Js.Str(encode(e))), Reader[T] {
       case upickle.Js.Str(jsStr) => decode(jsStr)
     })
@@ -54,3 +63,5 @@ trait UpickleCodecs {
   implicit val (encodeDurationUpickle, decodeDurationUpickle) =
     createUpickleCode[Duration](_.toString(), Duration.parse)
 }
+
+object UpickleCodecs extends UpickleCodecs

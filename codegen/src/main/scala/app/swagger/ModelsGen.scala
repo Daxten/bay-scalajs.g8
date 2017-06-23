@@ -13,7 +13,7 @@ import scala.collection.JavaConversions._
 import app._
 
 object ModelsGen {
-  def gen(swagger: Swagger, apiVersion: String, f: File) = {
+  def gen(swagger: Swagger, apiVersion: String, f: File): Unit = {
     println(s"- Starting Models Generator for ${f.pathAsString}")
     val modelsFolder = file"shared/src/main/scala/shared/models/swagger/${f.nameWithoutExtension}/$apiVersion"
 

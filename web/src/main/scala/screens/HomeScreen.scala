@@ -2,16 +2,14 @@ package screens
 
 import java.time.OffsetDateTime
 
+import _root_.utils.HtmlTags
 import autowire._
-import components.LoremIpsumComponent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import models.Locs.Loc
 import services.AjaxClient
 import shared.services.WiredApi
 import shared.utils.{Codecs, LoremIpsum}
-import utils.HtmlTags
-import cats.implicits._
 
 object HomeScreen extends HtmlTags with Codecs {
 
@@ -24,7 +22,7 @@ object HomeScreen extends HtmlTags with Codecs {
     def mounted() = Callback {
       AjaxClient[WiredApi].now().call().foreach {
         case Right(time) => println(time.toString)
-        case Left(e)    => org.scalajs.dom.window.alert(e.toString)
+        case Left(e)     => org.scalajs.dom.window.alert(e.toString)
       }
     }
 
@@ -34,15 +32,13 @@ object HomeScreen extends HtmlTags with Codecs {
         <.div(
           LoremIpsum.paragraphs(4).map(<.p(_)).toTagMod,
           OffsetDateTime.now.toString
-        ),
-        <.div(^.marginTop := "40px")(
-          LoremIpsumComponent(props.c)
         )
       )
     }
   }
 
-  private val component = ScalaComponent.build[Props]("HomeScreen")
+  private val component = ScalaComponent
+    .builder[Props]("HomeScreen")
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount(_.backend.mounted())

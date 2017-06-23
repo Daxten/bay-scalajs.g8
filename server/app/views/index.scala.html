@@ -1,6 +1,17 @@
 @()(implicit request: Request[_], messages: Messages)
 
+
 @main {
-    <div id="root"></div>
-    @scalajs.html.scripts("web", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
+    <div id="root" class="container body"></div>
+    <script src="@{
+        def bundleUrl(projectName: String): Option[String] = {
+            val name = projectName.toLowerCase
+            Seq(s"$name-opt-bundle.js", s"$name-fastopt-bundle.js")
+                    .find(name => getClass.getResource(s"/public/$name") != null)
+                    .map(controllers.routes.Assets.versioned(_).url)
+        }
+
+        bundleUrl("web")
+    }"></script>
+
 }

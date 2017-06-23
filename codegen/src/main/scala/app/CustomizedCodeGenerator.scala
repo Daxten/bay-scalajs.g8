@@ -1,3 +1,4 @@
+// scalafmt: { maxColumn = 120 }
 package app
 
 import slick.codegen.SourceCodeGenerator
@@ -54,26 +55,35 @@ class CustomizedCodeGenerator(val model: m.Model) extends SourceCodeGenerator(mo
         case "java.sql.Date" => "LocalDate"
         case "java.sql.Time" => "LocalTime"
         case "java.sql.Timestamp" =>
-          model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
-            case "timestamptz" => "OffsetDateTime"
-            case _             => "LocalDateTime"
-          } getOrElse "LocalDateTime"
+          model.options
+            .find(_.isInstanceOf[ColumnOption.SqlType])
+            .map(_.asInstanceOf[ColumnOption.SqlType].typeName)
+            .map {
+              case "timestamptz" => "OffsetDateTime"
+              case _             => "LocalDateTime"
+            } getOrElse "LocalDateTime"
         case "String" =>
-          model.options.find(_.isInstanceOf[ColumnOption.SqlType]).map(_.asInstanceOf[ColumnOption.SqlType].typeName).map {
-            case "json" | "jsonb" => "Json"
-            case "hstore"         => "Map[String, String]"
-            case "_text"          => "List[String]"
-            case "_varchar"       => "List[String]"
-            case "geometry"       => "com.vividsolutions.jts.geom.Geometry"
-            case "int8[]"         => "List[Long]"
-            case "interval"       => "Duration"
-            case e                => "String"
-          } getOrElse "String"
+          model.options
+            .find(_.isInstanceOf[ColumnOption.SqlType])
+            .map(_.asInstanceOf[ColumnOption.SqlType].typeName)
+            .map {
+              case "json" | "jsonb" => "Json"
+              case "hstore"         => "Map[String, String]"
+              case "_text"          => "List[String]"
+              case "_varchar"       => "List[String]"
+              case "geometry"       => "com.vividsolutions.jts.geom.Geometry"
+              case "int8[]"         => "List[Long]"
+              case "interval"       => "Duration"
+              case e                => "String"
+            } getOrElse "String"
         case _ => super.rawType.asInstanceOf[String]
       }
 
       override def code =
-        s"""val $name: Rep[$actualType] = column[$actualType]("${model.name}"${options.filter(_ => !rawType.startsWith("List")).map(", " + _).mkString("")})"""
+        s"""val $name: Rep[$actualType] = column[$actualType]("${model.name}"${options
+          .filter(_ => !rawType.startsWith("List"))
+          .map(", " + _)
+          .mkString("")})"""
 
       override def rawName: String = entityName(model.name).uncapitalize
     }
