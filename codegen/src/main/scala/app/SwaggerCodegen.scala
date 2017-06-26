@@ -101,8 +101,8 @@ object SwaggerCodegen extends App {
             val playPath = strPath
               .split('/')
               .map { e =>
-                if (e.startsWith("{")) {
-                  val name = e.drop(1).dropRight(1)
+                if (e.startsWith("{") || e.startsWith(":")) {
+                  val name = e.drop(1).reverse.dropWhile(_ == '}').reverse
                   if (path.getOperations
                         .flatMap(e => Option(e.getParameters))
                         .flatten
@@ -114,7 +114,7 @@ object SwaggerCodegen extends App {
                         .contains("integer")) {
                     s"$${int($name)}"
                   } else {
-                    "$" + e
+                    "${" + name + "}"
                   }
                 } else e
               }
@@ -130,11 +130,10 @@ object SwaggerCodegen extends App {
                     .getOrElse(
                       method.toString.toLowerCase + strPath
                         .split('/')
-                        .filterNot(_.startsWith("{"))
+                        .filterNot(e => e.startsWith("{") || e.startsWith(":"))
                         .map(_.toUpperCamelCase)
                         .mkString)
 
-                  println(s"--- found $method")
 
                   val queryParameter = op.getParameters.toVector
                     .filter(_.getIn.toLowerCase == "query")
