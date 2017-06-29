@@ -11,8 +11,8 @@ import shared.utils.Implicits
 import shared.utils.LoremIpsum
 
 class WiredApiService(user: User,
-                      services: Services,
-                      files: Seq[MultipartFormData.FilePart[Files.TemporaryFile]])
+                      files: Seq[MultipartFormData.FilePart[Files.TemporaryFile]],
+                      services: Services)
     extends WiredApi
     with Implicits {
 

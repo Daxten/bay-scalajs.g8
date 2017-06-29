@@ -1,7 +1,6 @@
 package controllers
 
 import cats.implicits._
-import com.google.inject.Inject
 import jp.t2v.lab.play2.auth.LoginLogout
 import jp.t2v.lab.play2.auth.OptionalAuthElement
 import models.forms.LoginForm
@@ -16,7 +15,7 @@ import upickle.default._
 
 import scala.concurrent.ExecutionContext
 
-class Application @Inject()(val services: Services)(implicit val ec: ExecutionContext)
+class Application(val services: Services)(implicit val ec: ExecutionContext)
     extends ExtendedController
     with AuthConfigImpl
     with OptionalAuthElement
@@ -65,7 +64,7 @@ class Application @Inject()(val services: Services)(implicit val ec: ExecutionCo
           .getOrElse("")
 
         AutowireRouter
-          .route[WiredApi](new WiredApiService(user, services, request.body.files)) {
+          .route[WiredApi](new WiredApiService(user, request.body.files, services)) {
             val json = read[Map[String, String]](dataStr)
             autowire.Core.Request(path, json)
           }

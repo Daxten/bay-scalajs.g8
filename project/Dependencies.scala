@@ -9,6 +9,7 @@ object Dependencies {
   val flywayPlay  = "3.1.0" // https://github.com/flyway/flyway-play
   val bcrypt      = "3.1" // https://github.com/t3hnar/scala-bcrypt
   val betterFiles = "2.17.1" // https://github.com/pathikrit/better-files
+  val macwire     = "2.3.0" // https://github.com/adamw/macwire
 
   // ScalaJs
   val scalajsReact = "1.0.1" // https://github.com/japgolly/scalajs-react/blob/master/doc/USAGE.md

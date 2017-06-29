@@ -4,7 +4,6 @@ import jp.t2v.lab.play2.auth._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Result
 import services.Services
-import services.dao.UserDao
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
