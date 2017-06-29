@@ -1,8 +1,6 @@
 package controllers
 
 import cats.implicits._
-import jp.t2v.lab.play2.auth.LoginLogout
-import jp.t2v.lab.play2.auth.OptionalAuthElement
 import models.forms.LoginForm
 import play.api.data.Form
 import play.api.data.Forms._
@@ -15,15 +13,14 @@ import upickle.default._
 
 import scala.concurrent.ExecutionContext
 
-class Application(val services: Services)(implicit val ec: ExecutionContext)
+class Application(val controllerComponents: ControllerComponents,
+                  val services: Services,
+                  security: Security)(implicit val ec: ExecutionContext)
     extends ExtendedController
-    with AuthConfigImpl
-    with OptionalAuthElement
-    with LoginLogout
     with I18nSupport {
 
-  def index(path: String) = StackAction { implicit request =>
-    loggedIn match {
+  def index(path: String) = security.optUserIdAction { implicit request =>
+    request.userId match {
       case Some(_) =>
         Ok(views.html.index())
       case None =>
@@ -44,19 +41,20 @@ class Application(val services: Services)(implicit val ec: ExecutionContext)
         BadRequest(views.html.login(e)))
       userId <- services.userDao.maybeLogin(form) |> HttpResult.fromFOption(
         BadRequest(views.html.login(loginForm.fill(form).withGlobalError("bad.password"))))
-      loginResult <- gotoLoginSucceeded(userId) |> HttpResult.fromFuture
-    } yield loginResult
+    } yield
+      Redirect(routes.Application.index("/"))
+        .withSession(request.session + (security.sessionKey -> userId.toString))
 
     constructResult(result)
   }
 
-  def logout: Action[AnyContent] = Action.async { implicit request =>
-    gotoLogoutSucceeded
+  def logout: Action[AnyContent] = Action { implicit request =>
+    Redirect(routes.Application.login()).withNewSession
   }
 
-  def api(s: String) = AsyncStack(parse.multipartFormData) { implicit request =>
+  def api(s: String) = security.UserOptAction(parse.multipartFormData).async { implicit request =>
     val path = s.split("/")
-    loggedIn match {
+    request.user match {
       case Some(user) =>
         val dataStr = request.body.dataParts
           .get("data")

@@ -1,15 +1,12 @@
 package controllers
 
 import cats.data.EitherT
+import cats.syntax.either._
 import play.api.data.Form
-import play.api.mvc.Controller
-import play.api.mvc.Request
-import play.api.mvc.Result
+import play.api.mvc._
+import services.Services
 import shared.utils.Codecs
 import shared.utils.Implicits
-import cats.syntax.either._
-import play.api.i18n.MessagesApi
-import services.Services
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -17,7 +14,7 @@ import scala.concurrent.Future
 /**
   * Created by Haak on 24.04.2016.
   */
-trait ExtendedController extends Controller with Implicits with Codecs {
+trait ExtendedController extends BaseController with Implicits with Codecs {
   val services: Services
   implicit val ec: ExecutionContext
 
@@ -65,6 +62,4 @@ trait ExtendedController extends Controller with Implicits with Codecs {
   implicit class EnrichedOps[T](t: T) {
     def |>[R](f: T => R): R = f(t)
   }
-
-  def messagesApi: MessagesApi = services.messagesApi
 }

@@ -6,7 +6,7 @@ name in ThisBuild := """bay-scalajs"""
 
 version in ThisBuild := "0.1-SNAPSHOT"
 
-scalaVersion in ThisBuild := "2.11.11"
+scalaVersion in ThisBuild := "2.12.2"
 
 resolvers in ThisBuild ++= Seq(Resolver.bintrayRepo("scalameta", "maven"), Resolver.jcenterRepo)
 
@@ -71,7 +71,6 @@ lazy val server = (project in file("server"))
       "com.github.t3hnar"        %% "scala-bcrypt" % bcrypt,
       "com.typesafe.slick"       %% "slick"        % slick,
       "com.typesafe.play"        %% "play-slick"   % playSlick,
-      "jp.t2v"                   %% "play2-auth"   % playAuth,
       "org.flywaydb"             %% "flyway-play"  % flywayPlay,
       "com.github.pathikrit"     %% "better-files" % betterFiles,
       "play-circe"               %% "play-circe"   % playCirce,
