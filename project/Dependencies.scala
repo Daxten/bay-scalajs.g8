@@ -1,7 +1,7 @@
 object Dependencies {
 
   // Server (jvm)
-  val slickPg     = "0.15.1" // https://github.com/tminglei/slick-pg
+  val slickPg     = "0.15.+" // https://github.com/tminglei/slick-pg
   val slick       = "3.2.+" // http://slick.lightbend.com/
   val playSlick   = "3.0.+" // https://github.com/playframework/play-slick
   val playCirce   = "2.6-0.8.0" // https://github.com/jilen/play-circe
